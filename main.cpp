@@ -65,7 +65,7 @@ int main()
             }
             if (IsKeyPressed(KEY_LEFT))
             {
-                panzer2.addPanzerBullets({panzer2.getPanzerPosition().x + panzer2.getPanzerSize().x, panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2});
+                panzer2.addPanzerBullets({panzer2.getPanzerPosition().x, panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2});
             }
             for (Vector2 &fired : panzer2.getPanzerBullets())
             {
