@@ -1,0 +1,3 @@
+-add the sprites
+-add a main menu with play button
+    -settings button where you can change the keys and switch sides of red/blue
