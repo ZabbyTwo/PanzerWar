@@ -1,3 +1,7 @@
 -add the sprites
--add a main menu with play button
-    -settings button where you can change the keys and switch sides of red/blue
+-add a main menu with play button which leads you to the gamefield where a 3 second timer counts down
+    -settings button where you can change:
+        -keys
+        -switch sides of red/blue
+        -resolution
+        -shooting sound wav per panzer
