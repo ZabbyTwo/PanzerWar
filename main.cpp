@@ -31,11 +31,17 @@ int main()
         {
             if (IsKeyDown(KEY_W))
             {
-                panzer1.changePanzerPositionY('-');
+                if (panzer1.getPanzerPosition().y > 0)
+                {
+                    panzer1.changePanzerPositionY('-');
+                }
             }
             if (IsKeyDown(KEY_S))
             {
-                panzer1.changePanzerPositionY('+');
+                if (panzer1.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y)
+                {
+                    panzer1.changePanzerPositionY('+');
+                }
             }
             if (IsKeyPressed(KEY_D))
             {
@@ -57,11 +63,17 @@ int main()
         {
             if (IsKeyDown(KEY_UP))
             {
-                panzer2.changePanzerPositionY('-');
+                if (panzer2.getPanzerPosition().y > 0)
+                {
+                    panzer2.changePanzerPositionY('-');
+                }
             }
             if (IsKeyDown(KEY_DOWN))
             {
-                panzer2.changePanzerPositionY('+');
+                if (panzer2.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y)
+                {
+                    panzer2.changePanzerPositionY('+');
+                }
             }
             if (IsKeyPressed(KEY_LEFT))
             {
