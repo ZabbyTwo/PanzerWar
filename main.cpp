@@ -6,18 +6,19 @@
 
 int main()
 {
-    const int screenWidth{1280};
-    const int screenHeight{720};
+    const int screenWidth{1920};
+    const int screenHeight{1080};
+    const int placeToBorder{30};
 
     const float movementSpeed{10};
     const float shootingVelocity{20};
 
-    Vector2 panzerPosition1{20, int(screenHeight / 2)};
-    Vector2 panzerSize1{70, 20};
+    Vector2 panzerSize1{200, 100};
+    Vector2 panzerPosition1{placeToBorder, int(screenHeight / 2)};
     panzer panzer1(panzerPosition1, panzerSize1);
 
-    Vector2 panzerPosition2{screenWidth - 90, int(screenHeight / 2)};
-    Vector2 panzerSize2{70, 20};
+    Vector2 panzerSize2{200, 100};
+    Vector2 panzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, int(screenHeight / 2)};
     panzer panzer2(panzerPosition2, panzerSize2);
 
     InitWindow(screenWidth, screenHeight, "Panzer War");
@@ -31,14 +32,14 @@ int main()
         {
             if (IsKeyDown(KEY_W))
             {
-                if (panzer1.getPanzerPosition().y > 0)
+                if (panzer1.getPanzerPosition().y > placeToBorder)
                 {
                     panzer1.changePanzerPositionY('-');
                 }
             }
             if (IsKeyDown(KEY_S))
             {
-                if (panzer1.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y)
+                if (panzer1.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
                 {
                     panzer1.changePanzerPositionY('+');
                 }
@@ -63,14 +64,14 @@ int main()
         {
             if (IsKeyDown(KEY_UP))
             {
-                if (panzer2.getPanzerPosition().y > 0)
+                if (panzer2.getPanzerPosition().y > placeToBorder)
                 {
                     panzer2.changePanzerPositionY('-');
                 }
             }
             if (IsKeyDown(KEY_DOWN))
             {
-                if (panzer2.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y)
+                if (panzer2.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
                 {
                     panzer2.changePanzerPositionY('+');
                 }
