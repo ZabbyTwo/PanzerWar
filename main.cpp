@@ -13,6 +13,9 @@ int main()
     const float movementSpeed{10};
     const float shootingVelocity{20};
 
+    InitWindow(screenWidth, screenHeight, "Panzer War");
+    SetTargetFPS(60);
+
     Vector2 panzerSize1{200, 100};
     Vector2 panzerPosition1{placeToBorder, int(screenHeight / 2)};
     panzer panzer1(panzerPosition1, panzerSize1);
@@ -21,11 +24,35 @@ int main()
     Vector2 panzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, int(screenHeight / 2)};
     panzer panzer2(panzerPosition2, panzerSize2);
 
-    InitWindow(screenWidth, screenHeight, "Panzer War");
-    SetTargetFPS(60);
+    const int startButtonWidth{600};
+    const int startButtonHeight{200};
+    Rectangle startButton(screenWidth / 2 - startButtonWidth / 2, screenHeight / 2 - startButtonHeight / 2, startButtonWidth, startButtonHeight);
+    bool startButtonAction{false};
+    int startButtonState{0};
+    const char *startButtonText{"PLAY"};
+    int startButtonTextFontSize{100};
+    int startButtonTextWidth{MeasureText(startButtonText, startButtonTextFontSize)};
+    float startButtonTextX{startButton.x + (startButton.width - startButtonTextWidth) / 2};
+    float startButtonTextY{startButton.y + (startButton.height - startButtonTextFontSize) / 2};
+
+    Vector2 mousePoint = {0.f, 0.f};
 
     while (!WindowShouldClose())
     {
+
+        mousePoint = GetMousePosition();
+        if (CheckCollisionPointRec(mousePoint, startButton))
+        {
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+                startButtonState = 2;
+            else
+                startButtonState = 1;
+
+            if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+                startButtonAction = true;
+        }
+        else
+            startButtonState = 0;
 
         // for panzer1
         if (!panzer1.getIsPanzerHit())
@@ -93,32 +120,40 @@ int main()
 
         BeginDrawing();
         ClearBackground(BLACK);
-        // for panzer1
-        if (!panzer1.getIsPanzerHit())
-        {
-            DrawRectangleV(panzer1.getPanzerPosition(), panzer1.getPanzerSize(), BLUE);
-        }
-        for (Vector2 bullet : panzer1.getPanzerBullets())
-        {
-            DrawCircleV(bullet, 20, YELLOW);
-        }
-        // DrawText(TextFormat("panzer1 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
-        // DrawText(TextFormat("panzer1 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
-        // DrawText(TextFormat("panzer1 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
 
-        // for panzer2
-        if (!panzer2.getIsPanzerHit())
+        if (!startButtonAction)
         {
-            DrawRectangleV(panzer2.getPanzerPosition(), panzer2.getPanzerSize(), RED);
+            DrawRectangleRec(startButton, GRAY);
+            DrawText(startButtonText, startButtonTextX, startButtonTextY, startButtonTextFontSize, BLACK);
         }
-        for (Vector2 bullet : panzer2.getPanzerBullets())
+        else
         {
-            DrawCircleV(bullet, 20, YELLOW);
-        }
-        // DrawText(TextFormat("panzer2 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
-        // DrawText(TextFormat("panzer2 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
-        // DrawText(TextFormat("panzer2 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
+            // for panzer1
+            if (!panzer1.getIsPanzerHit())
+            {
+                DrawRectangleV(panzer1.getPanzerPosition(), panzer1.getPanzerSize(), BLUE);
+            }
+            for (Vector2 bullet : panzer1.getPanzerBullets())
+            {
+                DrawCircleV(bullet, 20, YELLOW);
+            }
+            // DrawText(TextFormat("panzer1 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
+            // DrawText(TextFormat("panzer1 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
+            // DrawText(TextFormat("panzer1 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
 
+            // for panzer2
+            if (!panzer2.getIsPanzerHit())
+            {
+                DrawRectangleV(panzer2.getPanzerPosition(), panzer2.getPanzerSize(), RED);
+            }
+            for (Vector2 bullet : panzer2.getPanzerBullets())
+            {
+                DrawCircleV(bullet, 20, YELLOW);
+            }
+            // DrawText(TextFormat("panzer2 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
+            // DrawText(TextFormat("panzer2 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
+            // DrawText(TextFormat("panzer2 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
+        }
         EndDrawing();
     }
 
