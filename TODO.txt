@@ -1,15 +1,18 @@
 +add a main menu with play button
     -a 3 second timer starts to count down after play pressed
 
--settings button where you can change:
-    -keys
-    -switch sides of red/blue
-    -resolution
-    -make fullscreen/borderless/windowed
-    -shooting sound wav per panzer
-    -change background
+-add makefile
 
--Playmodes best of 3/5/7
++settings button where you can change:
+    +keys
+    +switch sides of red/blue
+    +make fullscreen/borderless/windowed
+        +when windowed then resolution
+    +shooting sound wav per panzer
+    +change background
+
+info: after you press play you can choose a game mode
+-game modes best of 3/5/7
     -survial: reload timer for 2 seconds and have ammunition for 50 shots
     -deathmatch: reload timer for 2 seconds and have infinite ammunition
     -custom: choose shooting/movement speed, reload timer, ammunition and how many rounds

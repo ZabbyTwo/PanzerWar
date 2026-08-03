@@ -35,12 +35,25 @@ int main()
     float startButtonTextX{startButton.x + (startButton.width - startButtonTextWidth) / 2};
     float startButtonTextY{startButton.y + (startButton.height - startButtonTextFontSize) / 2};
 
+    const int settingsButtonWidth{450};
+    const int settingsButtonHeight{150};
+    Rectangle settingsButton(screenWidth / 2 - settingsButtonWidth / 2, screenHeight / 2 + startButtonHeight, settingsButtonWidth, settingsButtonHeight);
+    bool settingsButtonAction{false};
+    int settingsButtonState{0};
+    const char *settingsButtonText{"SETTINGS"};
+    int settingsButtonTextFontSize{80};
+    int settingsButtonTextWidth{MeasureText(settingsButtonText, settingsButtonTextFontSize)};
+    float settingsButtonTextX{settingsButton.x + (settingsButton.width - settingsButtonTextWidth) / 2};
+    float settingsButtonTextY{settingsButton.y + (settingsButton.height - settingsButtonTextFontSize) / 2};
+
+    int settingsFontTextSize{60};
+
     Vector2 mousePoint = {0.f, 0.f};
 
     while (!WindowShouldClose())
     {
-
         mousePoint = GetMousePosition();
+
         if (CheckCollisionPointRec(mousePoint, startButton))
         {
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -53,6 +66,19 @@ int main()
         }
         else
             startButtonState = 0;
+
+        if (CheckCollisionPointRec(mousePoint, settingsButton))
+        {
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+                settingsButtonState = 2;
+            else
+                settingsButtonState = 1;
+
+            if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+                settingsButtonAction = true;
+        }
+        else
+            settingsButtonState = 0;
 
         // for panzer1
         if (!panzer1.getIsPanzerHit())
@@ -121,12 +147,15 @@ int main()
         BeginDrawing();
         ClearBackground(BLACK);
 
-        if (!startButtonAction)
+        if (!startButtonAction && !settingsButtonAction)
         {
-            DrawRectangleRec(startButton, GRAY);
+            DrawRectangleRec(startButton, GREEN);
             DrawText(startButtonText, startButtonTextX, startButtonTextY, startButtonTextFontSize, BLACK);
+            DrawRectangleRec(settingsButton, YELLOW);
+            DrawText(settingsButtonText, settingsButtonTextX, settingsButtonTextY, settingsButtonTextFontSize, BLACK);
         }
-        else
+
+        if (startButtonAction)
         {
             // for panzer1
             if (!panzer1.getIsPanzerHit())
@@ -153,6 +182,18 @@ int main()
             // DrawText(TextFormat("panzer2 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
             // DrawText(TextFormat("panzer2 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
             // DrawText(TextFormat("panzer2 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
+        }
+
+        if (settingsButtonAction)
+        {
+            DrawText("Move up:", placeToBorder, placeToBorder, settingsFontTextSize, WHITE);
+            DrawText("Move down:", placeToBorder, placeToBorder * 4, settingsFontTextSize, WHITE);
+            DrawText("Shoot:", placeToBorder, placeToBorder * 7, settingsFontTextSize, WHITE);
+            DrawText("Shooting Sound:", placeToBorder, placeToBorder * 10, settingsFontTextSize, WHITE);
+            DrawText("Switch Sides:", placeToBorder, placeToBorder * 13, settingsFontTextSize, WHITE);
+            DrawText("Screen:", placeToBorder, placeToBorder * 16, settingsFontTextSize, WHITE); // Dropdown box with types
+            DrawText("Resolution:", placeToBorder, placeToBorder * 19, settingsFontTextSize, WHITE); // When type "windowed" then ask for resolution
+            DrawText("Background:", placeToBorder, placeToBorder * 22, settingsFontTextSize, WHITE); // When type "windowed" then ask for resolution
         }
         EndDrawing();
     }
