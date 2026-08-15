@@ -11,13 +11,19 @@
 
 +back button for settings menu
 
-info: after you press play you can choose a game mode
+-make settings work
+
 -game modes best of 3/5/7
     -survial: reload timer for 2 seconds and have ammunition for 50 shots
     -deathmatch: reload timer for 2 seconds and have infinite ammunition
     -custom: choose shooting/movement speed, reload timer, ammunition and how many rounds
+    !after you press play you can choose a game mode
 
 -add makefile
+
+-cleanup code
+    -buttons in classes and button logics
+    -
 
 -sprites
     -panzers
@@ -27,4 +33,7 @@ info: after you press play you can choose a game mode
 
 -home menu music
 
--sounds when buttons clicked
+-sound effects
+    -shooting
+    -button clicks
+    -settings
