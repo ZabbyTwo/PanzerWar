@@ -14,19 +14,22 @@ int main()
   const float shootingVelocity{20};
 
   // Window Settings
-  SetConfigFlags(FLAG_FULLSCREEN_MODE);
+  // SetConfigFlags(FLAG_FULLSCREEN_MODE);
 
   InitWindow(screenWidth, screenHeight, "Panzer War");
   SetTargetFPS(60);
 
+  // panzer 1
   Vector2 panzerSize1{200, 100};
   Vector2 panzerPosition1{placeToBorder, int(screenHeight / 2)};
   panzer panzer1(panzerPosition1, panzerSize1);
 
+  // panzer 2
   Vector2 panzerSize2{200, 100};
   Vector2 panzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, int(screenHeight / 2)};
   panzer panzer2(panzerPosition2, panzerSize2);
 
+  // start button
   const int startButtonWidth{600};
   const int startButtonHeight{200};
   Rectangle startButton{screenWidth / 2 - startButtonWidth / 2,
@@ -41,6 +44,7 @@ int main()
   float startButtonTextX{startButton.x + (startButton.width - startButtonTextWidth) / 2};
   float startButtonTextY{startButton.y + (startButton.height - startButtonTextFontSize) / 2};
 
+  // settings button
   const int settingsButtonWidth{450};
   const int settingsButtonHeight{150};
   Rectangle settingsButton{screenWidth / 2 - settingsButtonWidth / 2,
@@ -57,6 +61,10 @@ int main()
 
   int settingsFontTextSize{60};
 
+  bool start{false};
+  int countdown{3};
+  float countdownTimer{0.0f};
+
   Vector2 mousePoint = {0.f, 0.f};
 
   while (!WindowShouldClose())
@@ -71,7 +79,10 @@ int main()
         startButtonState = 1;
 
       if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+      {
         startButtonAction = true;
+        start = true;
+      }
     }
     else
       startButtonState = 0;
@@ -89,73 +100,92 @@ int main()
     else
       settingsButtonState = 0;
 
-    // for panzer1
-    if (!panzer1.getIsPanzerHit())
+    if (!start)
     {
-      if (IsKeyDown(KEY_W))
+      // for panzer1
+      if (!panzer1.getIsPanzerHit())
       {
-        if (panzer1.getPanzerPosition().y > placeToBorder)
+        if (IsKeyDown(KEY_W))
         {
-          panzer1.changePanzerPositionY('-');
+          if (panzer1.getPanzerPosition().y > placeToBorder)
+          {
+            panzer1.changePanzerPositionY('-');
+          }
+        }
+        if (IsKeyDown(KEY_S))
+        {
+          if (panzer1.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
+          {
+            panzer1.changePanzerPositionY('+');
+          }
+        }
+        if (IsKeyPressed(KEY_D))
+        {
+          panzer1.addPanzerBullets({panzer1.getPanzerPosition().x + panzer1.getPanzerSize().x,
+                                    panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2});
+        }
+        for (Vector2 &fired : panzer1.getPanzerBullets())
+        {
+          fired.x += shootingVelocity;
+          Rectangle panzer2Hitbox{panzer2.getPanzerPosition().x, panzer2.getPanzerPosition().y,
+                                  panzer2.getPanzerSize().x, panzer2.getPanzerSize().y};
+          if (CheckCollisionCircleRec(fired, 20.0f, panzer2Hitbox))
+          {
+            panzer2.setIsPanzerHit(true);
+          }
         }
       }
-      if (IsKeyDown(KEY_S))
+
+      // for panzer2
+      if (!panzer2.getIsPanzerHit())
       {
-        if (panzer1.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
+        if (IsKeyDown(KEY_UP))
         {
-          panzer1.changePanzerPositionY('+');
+          if (panzer2.getPanzerPosition().y > placeToBorder)
+          {
+            panzer2.changePanzerPositionY('-');
+          }
         }
-      }
-      if (IsKeyPressed(KEY_D))
-      {
-        panzer1.addPanzerBullets({panzer1.getPanzerPosition().x + panzer1.getPanzerSize().x,
-                                  panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2});
-      }
-      for (Vector2 &fired : panzer1.getPanzerBullets())
-      {
-        fired.x += shootingVelocity;
-        Rectangle panzer2Hitbox{panzer2.getPanzerPosition().x, panzer2.getPanzerPosition().y,
-                                panzer2.getPanzerSize().x, panzer2.getPanzerSize().y};
-        if (CheckCollisionCircleRec(fired, 20.0f, panzer2Hitbox))
+        if (IsKeyDown(KEY_DOWN))
         {
-          panzer2.setIsPanzerHit(true);
+          if (panzer2.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
+          {
+            panzer2.changePanzerPositionY('+');
+          }
+        }
+        if (IsKeyPressed(KEY_LEFT))
+        {
+          panzer2.addPanzerBullets({panzer2.getPanzerPosition().x,
+                                    panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2});
+        }
+        for (Vector2 &fired : panzer2.getPanzerBullets())
+        {
+          fired.x -= shootingVelocity;
+          Rectangle panzer1Hitbox{panzer1.getPanzerPosition().x,
+                                  panzer1.getPanzerPosition().y,
+                                  panzer1.getPanzerSize().x,
+                                  panzer1.getPanzerSize().y};
+          if (CheckCollisionCircleRec(fired, 20.0f, panzer1Hitbox))
+          {
+            panzer1.setIsPanzerHit(true);
+          }
         }
       }
     }
-
-    // for panzer2
-    if (!panzer2.getIsPanzerHit())
+    
+    if (start)
     {
-      if (IsKeyDown(KEY_UP))
+      countdownTimer += GetFrameTime();
+
+      if (countdownTimer >= 1.0f)
       {
-        if (panzer2.getPanzerPosition().y > placeToBorder)
-        {
-          panzer2.changePanzerPositionY('-');
-        }
+        countdown--;
+        countdownTimer = 0.0f;
       }
-      if (IsKeyDown(KEY_DOWN))
+
+      if (countdown <= 0)
       {
-        if (panzer2.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
-        {
-          panzer2.changePanzerPositionY('+');
-        }
-      }
-      if (IsKeyPressed(KEY_LEFT))
-      {
-        panzer2.addPanzerBullets({panzer2.getPanzerPosition().x,
-                                  panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2});
-      }
-      for (Vector2 &fired : panzer2.getPanzerBullets())
-      {
-        fired.x -= shootingVelocity;
-        Rectangle panzer1Hitbox{panzer1.getPanzerPosition().x,
-                                panzer1.getPanzerPosition().y,
-                                panzer1.getPanzerSize().x,
-                                panzer1.getPanzerSize().y};
-        if (CheckCollisionCircleRec(fired, 20.0f, panzer1Hitbox))
-        {
-          panzer1.setIsPanzerHit(true);
-        }
+        start = false;
       }
     }
 
@@ -172,31 +202,39 @@ int main()
 
     if (startButtonAction)
     {
-      // for panzer1
-      if (!panzer1.getIsPanzerHit())
+      if (start)
       {
-        DrawRectangleV(panzer1.getPanzerPosition(), panzer1.getPanzerSize(), BLUE);
-        for (Vector2 bullet : panzer1.getPanzerBullets())
-        {
-          DrawCircleV(bullet, 20, YELLOW);
-        }
+        const char *text = TextFormat("%d", countdown);
+        DrawText(text, screenWidth / 2, screenHeight / 2, 120, DARKGRAY);
       }
-      // DrawText(TextFormat("panzer1 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
-      // DrawText(TextFormat("panzer1 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
-      // DrawText(TextFormat("panzer1 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
+      else
+      {
+        // for panzer1
+        if (!panzer1.getIsPanzerHit())
+        {
+          DrawRectangleV(panzer1.getPanzerPosition(), panzer1.getPanzerSize(), BLUE);
+          for (Vector2 bullet : panzer1.getPanzerBullets())
+          {
+            DrawCircleV(bullet, 20, YELLOW);
+          }
+        }
+        // DrawText(TextFormat("panzer1 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
+        // DrawText(TextFormat("panzer1 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
+        // DrawText(TextFormat("panzer1 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
 
-      // for panzer2
-      if (!panzer2.getIsPanzerHit())
-      {
-        DrawRectangleV(panzer2.getPanzerPosition(), panzer2.getPanzerSize(), RED);
-        for (Vector2 bullet : panzer2.getPanzerBullets())
+        // for panzer2
+        if (!panzer2.getIsPanzerHit())
         {
-          DrawCircleV(bullet, 20, YELLOW);
+          DrawRectangleV(panzer2.getPanzerPosition(), panzer2.getPanzerSize(), RED);
+          for (Vector2 bullet : panzer2.getPanzerBullets())
+          {
+            DrawCircleV(bullet, 20, YELLOW);
+          }
         }
+        // DrawText(TextFormat("panzer2 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
+        // DrawText(TextFormat("panzer2 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
+        // DrawText(TextFormat("panzer2 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
       }
-      // DrawText(TextFormat("panzer2 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
-      // DrawText(TextFormat("panzer2 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
-      // DrawText(TextFormat("panzer2 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
     }
 
     if (settingsButtonAction)

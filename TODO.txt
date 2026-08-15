@@ -1,7 +1,5 @@
 +add a main menu with play button
-    -a 3 second timer starts to count down after play pressed
-
--add makefile
+    +a 3 second timer starts to count down after play pressed
 
 +settings button where you can change:
     +keys
@@ -18,6 +16,8 @@ info: after you press play you can choose a game mode
     -survial: reload timer for 2 seconds and have ammunition for 50 shots
     -deathmatch: reload timer for 2 seconds and have infinite ammunition
     -custom: choose shooting/movement speed, reload timer, ammunition and how many rounds
+
+-add makefile
 
 -sprites
     -panzers
