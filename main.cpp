@@ -59,10 +59,26 @@ int main()
   float settingsButtonTextX{settingsButton.x + (settingsButton.width - settingsButtonTextWidth) / 2};
   float settingsButtonTextY{settingsButton.y + (settingsButton.height - settingsButtonTextFontSize) / 2};
 
+  // text in settings
   int settingsFontTextSize{60};
 
-  bool start{false};
-  int countdown{3};
+  // settings back button
+  const int settingsBackButtonWidth{300};
+  const int settingsBackButtonHeight{150};
+  Rectangle settingsBackButton{placeToBorder,
+                               screenHeight - placeToBorder - settingsBackButtonHeight,
+                               settingsBackButtonWidth,
+                               settingsBackButtonHeight};
+  bool settingsBackButtonAction{false};
+  int settingsBackButtonState{0};
+  const char *settingsBackButtonText{"BACK"};
+  int settingsBackButtonTextFontSize{80};
+  int settingsBackButtonTextWidth{MeasureText(settingsBackButtonText, settingsBackButtonTextFontSize)};
+  float settingsBackButtonTextX{settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2};
+  float settingsBackButtonTextY{settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2};
+
+  bool countdownStart{false};
+  int countdownStartTime{3};
   float countdownTimer{0.0f};
 
   Vector2 mousePoint = {0.f, 0.f};
@@ -71,36 +87,80 @@ int main()
   {
     mousePoint = GetMousePosition();
 
-    if (CheckCollisionPointRec(mousePoint, startButton))
+    if (!startButtonAction && !settingsButtonAction)
     {
-      if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        startButtonState = 2;
-      else
-        startButtonState = 1;
-
-      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+      // start button
+      if (CheckCollisionPointRec(mousePoint, startButton))
       {
-        startButtonAction = true;
-        start = true;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+          startButtonState = 2;
+        }
+        else
+        {
+          startButtonState = 1;
+        }
+
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+          startButtonAction = true;
+          countdownStart = true;
+        }
+      }
+      else
+      {
+        startButtonState = 0;
+      }
+
+      // settings button
+      if (CheckCollisionPointRec(mousePoint, settingsButton))
+      {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+          settingsButtonState = 2;
+        }
+        else
+        {
+          settingsButtonState = 1;
+        }
+
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+          settingsButtonAction = true;
+        }
+      }
+      else
+      {
+        settingsButtonState = 0;
       }
     }
-    else
-      startButtonState = 0;
 
-    if (CheckCollisionPointRec(mousePoint, settingsButton))
+    if (settingsButtonAction)
     {
-      if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        settingsButtonState = 2;
+      // settings back button
+      if (CheckCollisionPointRec(mousePoint, settingsBackButton))
+      {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+          settingsBackButtonState = 2;
+        }
+        else
+        {
+          settingsBackButtonState = 1;
+        }
+
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+          settingsBackButtonAction = true;
+        }
+      }
       else
-        settingsButtonState = 1;
-
-      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        settingsButtonAction = true;
+      {
+        settingsBackButtonState = 0;
+      }
     }
-    else
-      settingsButtonState = 0;
 
-    if (!start)
+    if (!countdownStart)
     {
       // for panzer1
       if (!panzer1.getIsPanzerHit())
@@ -172,20 +232,20 @@ int main()
         }
       }
     }
-    
-    if (start)
+
+    if (countdownStart)
     {
       countdownTimer += GetFrameTime();
 
       if (countdownTimer >= 1.0f)
       {
-        countdown--;
+        countdownStartTime--;
         countdownTimer = 0.0f;
       }
 
-      if (countdown <= 0)
+      if (countdownStartTime <= 0)
       {
-        start = false;
+        countdownStart = false;
       }
     }
 
@@ -196,15 +256,16 @@ int main()
     {
       DrawRectangleRec(startButton, GREEN);
       DrawText(startButtonText, startButtonTextX, startButtonTextY, startButtonTextFontSize, BLACK);
+
       DrawRectangleRec(settingsButton, YELLOW);
       DrawText(settingsButtonText, settingsButtonTextX, settingsButtonTextY, settingsButtonTextFontSize, BLACK);
     }
 
     if (startButtonAction)
     {
-      if (start)
+      if (countdownStart)
       {
-        const char *text = TextFormat("%d", countdown);
+        const char *text = TextFormat("%d", countdownStartTime);
         DrawText(text, screenWidth / 2, screenHeight / 2, 120, DARKGRAY);
       }
       else
@@ -237,6 +298,7 @@ int main()
       }
     }
 
+    // settings menu
     if (settingsButtonAction)
     {
       DrawText("Move up:", placeToBorder, placeToBorder,
@@ -262,6 +324,15 @@ int main()
 
       DrawText("Background:", placeToBorder, placeToBorder * 22,
                settingsFontTextSize, WHITE); // When type "windowed" then ask for resolution
+
+      DrawRectangleRec(settingsBackButton, GRAY);
+      DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
+
+      if (settingsBackButtonAction)
+      {
+        settingsButtonAction = false;
+        settingsBackButtonAction = false;
+      }
     }
     EndDrawing();
   }

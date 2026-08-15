@@ -9,7 +9,7 @@
     +shooting sound wav per panzer
     +change background
 
--back button for settings menu
++back button for settings menu
 
 info: after you press play you can choose a game mode
 -game modes best of 3/5/7
