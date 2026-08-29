@@ -11,13 +11,21 @@
 
 +back button for settings menu
 
--make settings work
++add input boxes in settings
+
+-make settings work via settings file
+
+-add quit button on home screen
+
+-when "esc" pressed window closes
 
 -game modes best of 3/5/7
     -survial: reload timer for 2 seconds and have ammunition for 50 shots
     -deathmatch: reload timer for 2 seconds and have infinite ammunition
     -custom: choose shooting/movement speed, reload timer, ammunition and how many rounds
-    !after you press play you can choose a game mode
+    !on the homescreen you can choose the game mode and then press play
+
+-make buttons do sth when hover
 
 -add makefile
 

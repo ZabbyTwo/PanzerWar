@@ -1,4 +1,8 @@
 #include "raylib.h"
+
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+
 #include "panzer.h"
 
 #include <iostream>
@@ -65,10 +69,11 @@ int main()
   // settings back button
   const int settingsBackButtonWidth{300};
   const int settingsBackButtonHeight{150};
-  Rectangle settingsBackButton{placeToBorder,
-                               screenHeight - placeToBorder - settingsBackButtonHeight,
-                               settingsBackButtonWidth,
-                               settingsBackButtonHeight};
+  Rectangle settingsBackButton{
+      (screenWidth / 2.0f) - (settingsBackButtonWidth / 2.0f),
+      screenHeight - placeToBorder - settingsBackButtonHeight,
+      settingsBackButtonWidth,
+      settingsBackButtonHeight};
   bool settingsBackButtonAction{false};
   int settingsBackButtonState{0};
   const char *settingsBackButtonText{"BACK"};
@@ -77,6 +82,28 @@ int main()
   float settingsBackButtonTextX{settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2};
   float settingsBackButtonTextY{settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2};
 
+  // settings inputs and states
+  char moveUpInput[64]{"W"};
+  char moveDownInput[64]{"S"};
+  char shootInput[64]{"D"};
+  char shootSoundInput[64]{"OFF"};
+  char switchSidesInput[64]{"NO"};
+  char screenInput[64]{"Window"};
+  char resolutionInput[64]{"1920x1080"};
+  char backgroundInput[64]{"DEFAULT"};
+  bool moveUpEditP1 = false;
+  bool moveDownEditP1 = false;
+  bool shootEditP1 = false;
+  bool moveUpEditP2 = false;
+  bool moveDownEditP2 = false;
+  bool shootEditP2 = false;
+  bool soundEdit = false;
+  bool switchSidesEdit = false;
+  bool screenEdit = false;
+  bool resolutionEdit = false;
+  bool backgroundEdit = false;
+
+  // countdown
   bool countdownStart{false};
   int countdownStartTime{3};
   float countdownTimer{0.0f};
@@ -301,33 +328,77 @@ int main()
     // settings menu
     if (settingsButtonAction)
     {
-      DrawText("Move up:", placeToBorder, placeToBorder,
-               settingsFontTextSize, WHITE);
+      GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
 
-      DrawText("Move down:", placeToBorder, placeToBorder * 4,
-               settingsFontTextSize, WHITE);
+      int boxWidth = 400;
+      int boxWidthPanzer = 200;
+      int boxHeight = settingsFontTextSize + 15;
 
-      DrawText("Shoot:", placeToBorder, placeToBorder * 7,
-               settingsFontTextSize, WHITE);
+      float boxStartX = placeToBorder + MeasureText("Shooting Sound: ", settingsFontTextSize) + 20;
 
-      DrawText("Shooting Sound:", placeToBorder, placeToBorder * 10,
-               settingsFontTextSize, WHITE);
+      auto GetBoxY = [&](int rowMultiplier) -> float
+      {
+        float textY = placeToBorder * rowMultiplier;
+        return textY + (settingsFontTextSize / 2.0f) - (boxHeight / 2.0f);
+      };
 
-      DrawText("Switch Sides:", placeToBorder, placeToBorder * 13,
-               settingsFontTextSize, WHITE);
+      // panzer settings
+      // panzer 1
+      DrawText("Move up P1:", placeToBorder, placeToBorder * 1, settingsFontTextSize, WHITE);
+      if (GuiTextBox({boxStartX, GetBoxY(1), (float)boxWidthPanzer, (float)boxHeight}, moveUpInput, 64, moveUpEditP1))
+        moveUpEditP1 = !moveUpEditP1;
 
-      DrawText("Screen:", placeToBorder, placeToBorder * 16,
-               settingsFontTextSize, WHITE); // Dropdown box with types
+      DrawText("Move down P1:", placeToBorder, placeToBorder * 4, settingsFontTextSize, WHITE);
+      if (GuiTextBox({boxStartX, GetBoxY(4), (float)boxWidthPanzer, (float)boxHeight}, moveDownInput, 64, moveDownEditP1))
+        moveDownEditP1 = !moveDownEditP1;
 
-      DrawText("Resolution:", placeToBorder, placeToBorder * 19,
-               settingsFontTextSize, WHITE); // When type "windowed" then ask for resolution
+      DrawText("Shoot P1:", placeToBorder, placeToBorder * 7, settingsFontTextSize, WHITE);
+      if (GuiTextBox({boxStartX, GetBoxY(7), (float)boxWidthPanzer, (float)boxHeight}, shootInput, 64, shootEditP1))
+        shootEditP1 = !shootEditP1;
 
-      DrawText("Background:", placeToBorder, placeToBorder * 22,
-               settingsFontTextSize, WHITE); // When type "windowed" then ask for resolution
+      // panzer 2
+      DrawText("Move up P2:", placeToBorder + boxStartX * 2, placeToBorder * 1, settingsFontTextSize, WHITE);
+      if (GuiTextBox({boxStartX * 3, GetBoxY(1), (float)boxWidthPanzer, (float)boxHeight}, moveUpInput, 64, moveUpEditP2))
+        moveUpEditP2 = !moveUpEditP2;
 
+      DrawText("Move down P2:", placeToBorder + boxStartX * 2, placeToBorder * 4, settingsFontTextSize, WHITE);
+      if (GuiTextBox({boxStartX * 3, GetBoxY(4), (float)boxWidthPanzer, (float)boxHeight}, moveDownInput, 64, moveDownEditP2))
+        moveDownEditP2 = !moveDownEditP2;
+
+      DrawText("Shoot P2:", placeToBorder + boxStartX * 2, placeToBorder * 7, settingsFontTextSize, WHITE);
+      if (GuiTextBox({boxStartX * 3, GetBoxY(7), (float)boxWidthPanzer, (float)boxHeight}, shootInput, 64, shootEditP2))
+        shootEditP2 = !shootEditP2;
+
+      // general settings
+      float widestGeneralLabel = MeasureText("Shooting Sound: ", settingsFontTextSize);
+      float totalGeneralWidth = widestGeneralLabel + 20 + boxWidth;
+
+      float generalTextStartX = (GetScreenWidth() / 2.0f) - (totalGeneralWidth / 2.0f);
+      float generalBoxStartX = generalTextStartX + widestGeneralLabel + 20;
+
+      DrawText("Shooting Sound:", generalTextStartX, placeToBorder * 10, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(10), (float)boxWidth, (float)boxHeight}, shootSoundInput, 64, soundEdit))
+        soundEdit = !soundEdit;
+
+      DrawText("Switch Sides:", generalTextStartX, placeToBorder * 13, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(13), (float)boxWidth, (float)boxHeight}, switchSidesInput, 64, switchSidesEdit))
+        switchSidesEdit = !switchSidesEdit;
+
+      DrawText("Screen:", generalTextStartX, placeToBorder * 16, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(16), (float)boxWidth, (float)boxHeight}, screenInput, 64, screenEdit))
+        screenEdit = !screenEdit;
+
+      DrawText("Resolution:", generalTextStartX, placeToBorder * 19, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(19), (float)boxWidth, (float)boxHeight}, resolutionInput, 64, resolutionEdit))
+        resolutionEdit = !resolutionEdit;
+
+      DrawText("Background:", generalTextStartX, placeToBorder * 22, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(22), (float)boxWidth, (float)boxHeight}, backgroundInput, 64, backgroundEdit))
+        backgroundEdit = !backgroundEdit;
+
+      // back button
       DrawRectangleRec(settingsBackButton, GRAY);
       DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
-
       if (settingsBackButtonAction)
       {
         settingsButtonAction = false;

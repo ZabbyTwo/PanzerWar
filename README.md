@@ -45,6 +45,6 @@ g++ main.cpp panzer.cpp -o main -lraylib
 ./main
 
 # for X11:
-g++ main.cpp panzer.cpp -o main -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
-./main
+g++ main.cpp panzer.cpp -o panzer_war -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+./panzer_war
 ```
