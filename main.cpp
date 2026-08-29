@@ -4,14 +4,19 @@
 #include "raygui.h"
 
 #include "panzer.h"
+#include "settings.h"
 
 #include <iostream>
 #include <vector>
 
 int main()
 {
-  const int screenWidth{1920};
-  const int screenHeight{1080};
+  Settings settings = loadSettings();
+  printSettings(settings);
+  Resolution resolution = settingsGetScreenWidth(settings);
+
+  const int screenWidth{resolution.x};
+  const int screenHeight{resolution.y};
   const int placeToBorder{30};
 
   const float movementSpeed{10};
@@ -24,22 +29,22 @@ int main()
   SetTargetFPS(60);
 
   // panzer 1
-  Vector2 panzerSize1{200, 100};
-  Vector2 panzerPosition1{placeToBorder, int(screenHeight / 2)};
+  Vector2 panzerSize1{200.0f, 100.0f};
+  Vector2 panzerPosition1{(float)placeToBorder, screenHeight / 2.0f};
   panzer panzer1(panzerPosition1, panzerSize1);
 
   // panzer 2
-  Vector2 panzerSize2{200, 100};
-  Vector2 panzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, int(screenHeight / 2)};
+  Vector2 panzerSize2{200.0f, 100.0f};
+  Vector2 panzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f};
   panzer panzer2(panzerPosition2, panzerSize2);
 
   // start button
   const int startButtonWidth{600};
   const int startButtonHeight{200};
-  Rectangle startButton{screenWidth / 2 - startButtonWidth / 2,
-                        screenHeight / 2 - startButtonHeight / 2,
-                        startButtonWidth,
-                        startButtonHeight};
+  Rectangle startButton{screenWidth / 2.0f - startButtonWidth / 2.0f,
+                        screenHeight / 2.0f - startButtonHeight / 2.0f,
+                        (float)startButtonWidth,
+                        (float)startButtonHeight};
   bool startButtonAction{false};
   int startButtonState{0};
   const char *startButtonText{"PLAY"};
@@ -51,10 +56,10 @@ int main()
   // settings button
   const int settingsButtonWidth{450};
   const int settingsButtonHeight{150};
-  Rectangle settingsButton{screenWidth / 2 - settingsButtonWidth / 2,
-                           screenHeight / 2 + startButtonHeight,
-                           settingsButtonWidth,
-                           settingsButtonHeight};
+  Rectangle settingsButton{screenWidth / 2.0f - settingsButtonWidth / 2.0f,
+                           screenHeight / 2.0f + startButtonHeight,
+                           (float)settingsButtonWidth,
+                           (float)settingsButtonHeight};
   bool settingsButtonAction{false};
   int settingsButtonState{0};
   const char *settingsButtonText{"SETTINGS"};
@@ -69,11 +74,10 @@ int main()
   // settings back button
   const int settingsBackButtonWidth{300};
   const int settingsBackButtonHeight{150};
-  Rectangle settingsBackButton{
-      (screenWidth / 2.0f) - (settingsBackButtonWidth / 2.0f),
-      screenHeight - placeToBorder - settingsBackButtonHeight,
-      settingsBackButtonWidth,
-      settingsBackButtonHeight};
+  Rectangle settingsBackButton{screenWidth / 2.0f - settingsBackButtonWidth / 2.0f,
+                               (float)(screenHeight - placeToBorder - settingsBackButtonHeight),
+                               (float)settingsBackButtonWidth,
+                               (float)settingsBackButtonHeight};
   bool settingsBackButtonAction{false};
   int settingsBackButtonState{0};
   const char *settingsBackButtonText{"BACK"};

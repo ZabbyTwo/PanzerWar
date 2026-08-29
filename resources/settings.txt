@@ -1,0 +1,11 @@
+moveUpP1=KEY_W
+moveDownP1=KEY_S
+shootP1=KEY_D
+moveUpP2=KEY_UP
+moveDownP2=KEY_DOWN
+shootP2=KEY_LEFT
+shootingSound=resources/shoot.wav
+switchSides=NO
+screen=Windowed
+resolution=1920x1080
+background=resources/default.png

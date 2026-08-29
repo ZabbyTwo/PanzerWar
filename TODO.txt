@@ -13,7 +13,10 @@
 
 +add input boxes in settings
 
--make settings work via settings file
++make settings work via settings file
+    -load and use settings in game
+    -make settings changeable
+    -makle settings generaly take over 
 
 -add quit button on home screen
 
