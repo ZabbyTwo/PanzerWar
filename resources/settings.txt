@@ -1,5 +1,5 @@
 shootingSound=resources/shoot.wav
 switchSides=NO
 screen=Windowed
-resolution=1600x900
+resolution=1920x1080
 background=resources/default.png

@@ -17,8 +17,11 @@
     +load settings
     +make settings changeable
     +save changes
-    -use settings in game, all of them
     -make settings generally take over 
+    -switch sides should be a button when clicked it changes from no to yes and vice versa
+    -make background.png work
+
+-fix scaling when resolution changes
 
 -add quit button on home screen
 
@@ -30,22 +33,22 @@
     -custom: choose shooting/movement speed, reload timer, ammunition and how many rounds
     !on the homescreen you can choose the game mode and then press play
 
+-after match finished ask, Replay(Play again) or To Home Screen
+
 -make buttons do sth when hover
-
--add makefile
-
--cleanup code
-    -buttons in classes and button logics
 
 -sprites
     -panzers
     -rounds
-    -buttons
-    -background
 
 -home menu music
 
 -sound effects
-    -shooting
-    -button clicks
-    -settings
+    -shooting -> and make the setting work
+    -button clicks/hovers
+    -changes, eg in settings
+
+-cleanup code
+    -buttons in classes and button logics
+
+-add makefile

@@ -123,13 +123,15 @@ int main()
   char switchSidesInput[64] = {0};
   strncpy(switchSidesInput, settings.switchSides ? "YES" : "NO", 63);
 
-  char screenInput[64] = {0};
+  const char *screenOptions = "Windowed;Borderless Window;Fullscreen";
+  int screenActive = 0;
+
   if (settings.screen == Windowed)
-    strncpy(screenInput, "Windowed", 63);
+    screenActive = 0;
   else if (settings.screen == BorderlessWindow)
-    strncpy(screenInput, "Borderless Window", 63);
+    screenActive = 1;
   else if (settings.screen == Fullscreen)
-    strncpy(screenInput, "Fullscreen", 63);
+    screenActive = 2;
 
   const char *resolutionOptions = "1920x1080;1600x900;1280x720;1024x768";
   int resolutionActive = 0;
@@ -437,9 +439,34 @@ int main()
       if (GuiTextBox({generalBoxStartX, GetBoxY(6), (float)boxWidth, (float)boxHeight}, switchSidesInput, 64, switchSidesEdit))
         switchSidesEdit = !switchSidesEdit;
 
+      int previousScreenActive = screenActive;
       DrawText("Screen:", generalTextStartX, placeToBorder * 9, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(9), (float)boxWidth, (float)boxHeight}, screenInput, 64, screenEdit))
+      if (GuiDropdownBox({generalBoxStartX, GetBoxY(9), (float)boxWidth, (float)boxHeight}, screenOptions, &screenActive, screenEdit))
+      {
         screenEdit = !screenEdit;
+      }
+
+      if (screenActive != previousScreenActive)
+      {
+        if (IsWindowFullscreen())
+          ToggleFullscreen();
+
+        if (screenActive == 0) // Windowed
+        {
+          ClearWindowState(FLAG_WINDOW_UNDECORATED);
+          SetWindowSize(screenWidth, screenHeight);
+        }
+        else if (screenActive == 1) // Borderless Window
+        {
+          SetWindowState(FLAG_WINDOW_UNDECORATED);
+          SetWindowSize(screenWidth, screenHeight);
+        }
+        else if (screenActive == 2) // Fullscreen
+        {
+          ClearWindowState(FLAG_WINDOW_UNDECORATED);
+          ToggleFullscreen();
+        }
+      }
 
       DrawText("Background:", generalTextStartX, placeToBorder * 12, settingsFontTextSize, WHITE);
       if (GuiTextBox({generalBoxStartX, GetBoxY(12), (float)boxWidth, (float)boxHeight}, backgroundInput, 64, backgroundEdit))
@@ -470,7 +497,6 @@ int main()
 
         SetWindowSize(screenWidth, screenHeight);
 
-        // Recenter all buttons for the new screen size
         startButton.x = screenWidth / 2.0f - startButtonWidth / 2.0f;
         startButton.y = screenHeight / 2.0f - startButtonHeight / 2.0f;
         startButtonTextX = startButton.x + (startButton.width - startButtonTextWidth) / 2;
@@ -510,11 +536,11 @@ int main()
         settings.background = backgroundInput;
         settings.switchSides = (switchSidesInput == "YES" || switchSidesInput == "yes");
 
-        if (screenInput == "Windowed")
+        if (screenActive == 0)
           settings.screen = Windowed;
-        else if (screenInput == "Borderless Window")
+        else if (screenActive == 1)
           settings.screen = BorderlessWindow;
-        else if (screenInput == "Fullscreen")
+        else if (screenActive == 2)
           settings.screen = Fullscreen;
 
         changeSettings(settings);
