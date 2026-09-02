@@ -14,13 +14,15 @@
 +add input boxes in settings
 
 +make settings work via settings file
-    -load and use settings in game
-    -make settings changeable
+    +load settings
+    -use settings in game, all of them
+    +make settings changeable
+    +save changes
     -makle settings generaly take over 
 
 -add quit button on home screen
 
--when "esc" pressed window closes
+-when "esc" pressed window closes, dont want it
 
 -game modes best of 3/5/7
     -survial: reload timer for 2 seconds and have ammunition for 50 shots
@@ -34,7 +36,6 @@
 
 -cleanup code
     -buttons in classes and button logics
-    -
 
 -sprites
     -panzers

@@ -8,12 +8,20 @@
 
 #include <iostream>
 #include <vector>
+#include <cstring>
 
 int main()
 {
   Settings settings = loadSettings();
   printSettings(settings);
   Resolution resolution = settingsGetScreenWidth(settings);
+
+  if (resolution.isEmpty())
+  {
+    initSettings();
+    settings = loadSettings();
+    resolution = settingsGetScreenWidth(settings);
+  }
 
   const int screenWidth{resolution.x};
   const int screenHeight{resolution.y};
@@ -23,7 +31,15 @@ int main()
   const float shootingVelocity{20};
 
   // Window Settings
-  // SetConfigFlags(FLAG_FULLSCREEN_MODE);
+
+  if (settings.screen == Fullscreen)
+  {
+    SetConfigFlags(FLAG_FULLSCREEN_MODE);
+  }
+  else if (settings.screen == BorderlessWindow)
+  {
+    SetConfigFlags(FLAG_WINDOW_UNDECORATED);
+  }
 
   InitWindow(screenWidth, screenHeight, "Panzer War");
   SetTargetFPS(60);
@@ -87,20 +103,53 @@ int main()
   float settingsBackButtonTextY{settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2};
 
   // settings inputs and states
-  char moveUpInput[64]{"W"};
-  char moveDownInput[64]{"S"};
-  char shootInput[64]{"D"};
-  char shootSoundInput[64]{"OFF"};
-  char switchSidesInput[64]{"NO"};
-  char screenInput[64]{"Window"};
-  char resolutionInput[64]{"1920x1080"};
-  char backgroundInput[64]{"DEFAULT"};
+  char moveUpP1Input[64] = {0};
+  strncpy(moveUpP1Input, settings.moveUpP1.c_str(), 63);
+
+  char moveDownP1Input[64] = {0};
+  strncpy(moveDownP1Input, settings.moveDownP1.c_str(), 63);
+
+  char shootP1Input[64] = {0};
+  strncpy(shootP1Input, settings.shootP1.c_str(), 63);
+
+  char moveUpP2Input[64] = {0};
+  strncpy(moveUpP2Input, settings.moveUpP2.c_str(), 63);
+
+  char moveDownP2Input[64] = {0};
+  strncpy(moveDownP2Input, settings.moveDownP2.c_str(), 63);
+
+  char shootP2Input[64] = {0};
+  strncpy(shootP2Input, settings.shootP2.c_str(), 63);
+
+  char shootSoundInput[64] = {0};
+  strncpy(shootSoundInput, settings.shootingSound.c_str(), 63);
+
+  char switchSidesInput[64] = {0};
+  strncpy(switchSidesInput, settings.switchSides ? "YES" : "NO", 63);
+
+  char screenInput[64] = {0};
+  if (settings.screen == Windowed)
+    strncpy(screenInput, "Windowed", 63);
+  else if (settings.screen == BorderlessWindow)
+    strncpy(screenInput, "Borderless Window", 63);
+  else if (settings.screen == Fullscreen)
+    strncpy(screenInput, "Fullscreen", 63);
+
+  char resolutionInput[64] = {0};
+  strncpy(resolutionInput, settings.resolution.c_str(), 63);
+
+  char backgroundInput[64] = {0};
+  strncpy(backgroundInput, settings.background.c_str(), 63);
+
+  // edit states for GuiTextBox
   bool moveUpEditP1 = false;
   bool moveDownEditP1 = false;
   bool shootEditP1 = false;
+
   bool moveUpEditP2 = false;
   bool moveDownEditP2 = false;
   bool shootEditP2 = false;
+
   bool soundEdit = false;
   bool switchSidesEdit = false;
   bool screenEdit = false;
@@ -349,28 +398,28 @@ int main()
       // panzer settings
       // panzer 1
       DrawText("Move up P1:", placeToBorder, placeToBorder * 1, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX, GetBoxY(1), (float)boxWidthPanzer, (float)boxHeight}, moveUpInput, 64, moveUpEditP1))
+      if (GuiTextBox({boxStartX, GetBoxY(1), (float)boxWidthPanzer, (float)boxHeight}, moveUpP1Input, 64, moveUpEditP1))
         moveUpEditP1 = !moveUpEditP1;
 
       DrawText("Move down P1:", placeToBorder, placeToBorder * 4, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX, GetBoxY(4), (float)boxWidthPanzer, (float)boxHeight}, moveDownInput, 64, moveDownEditP1))
+      if (GuiTextBox({boxStartX, GetBoxY(4), (float)boxWidthPanzer, (float)boxHeight}, moveDownP1Input, 64, moveDownEditP1))
         moveDownEditP1 = !moveDownEditP1;
 
       DrawText("Shoot P1:", placeToBorder, placeToBorder * 7, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX, GetBoxY(7), (float)boxWidthPanzer, (float)boxHeight}, shootInput, 64, shootEditP1))
+      if (GuiTextBox({boxStartX, GetBoxY(7), (float)boxWidthPanzer, (float)boxHeight}, shootP1Input, 64, shootEditP1))
         shootEditP1 = !shootEditP1;
 
       // panzer 2
       DrawText("Move up P2:", placeToBorder + boxStartX * 2, placeToBorder * 1, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX * 3, GetBoxY(1), (float)boxWidthPanzer, (float)boxHeight}, moveUpInput, 64, moveUpEditP2))
+      if (GuiTextBox({boxStartX * 3, GetBoxY(1), (float)boxWidthPanzer, (float)boxHeight}, moveUpP2Input, 64, moveUpEditP2))
         moveUpEditP2 = !moveUpEditP2;
 
       DrawText("Move down P2:", placeToBorder + boxStartX * 2, placeToBorder * 4, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX * 3, GetBoxY(4), (float)boxWidthPanzer, (float)boxHeight}, moveDownInput, 64, moveDownEditP2))
+      if (GuiTextBox({boxStartX * 3, GetBoxY(4), (float)boxWidthPanzer, (float)boxHeight}, moveDownP2Input, 64, moveDownEditP2))
         moveDownEditP2 = !moveDownEditP2;
 
       DrawText("Shoot P2:", placeToBorder + boxStartX * 2, placeToBorder * 7, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX * 3, GetBoxY(7), (float)boxWidthPanzer, (float)boxHeight}, shootInput, 64, shootEditP2))
+      if (GuiTextBox({boxStartX * 3, GetBoxY(7), (float)boxWidthPanzer, (float)boxHeight}, shootP2Input, 64, shootEditP2))
         shootEditP2 = !shootEditP2;
 
       // general settings
@@ -405,6 +454,30 @@ int main()
       DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
       if (settingsBackButtonAction)
       {
+        settings.moveUpP1 = moveUpP1Input;
+        settings.moveDownP1 = moveDownP1Input;
+        settings.shootP1 = shootP1Input;
+
+        settings.moveUpP2 = moveUpP2Input;
+        settings.moveDownP2 = moveDownP2Input;
+        settings.shootP2 = shootP2Input;
+
+        settings.shootingSound = shootSoundInput;
+        settings.resolution = resolutionInput;
+        settings.background = backgroundInput;
+        settings.switchSides = (switchSidesInput == "YES" || switchSidesInput == "yes");
+
+        if (screenInput == "Windowed")
+          settings.screen = Windowed;
+        else if (screenInput == "Borderless Window")
+          settings.screen = BorderlessWindow;
+        else if (screenInput == "Fullscreen")
+          settings.screen = Fullscreen;
+
+        changeSettings(settings);
+
+        resolution = settingsGetScreenWidth(settings);
+
         settingsButtonAction = false;
         settingsBackButtonAction = false;
       }

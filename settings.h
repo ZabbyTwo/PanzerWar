@@ -13,6 +13,11 @@ struct Resolution
 {
     int x;
     int y;
+
+    bool isEmpty() const
+    {
+        return x <= 0 || y <= 0;
+    }
 };
 
 struct Settings
@@ -42,3 +47,5 @@ void printSettings(Settings &settings);
 Resolution settingsGetScreenWidth(Settings &settings);
 
 void changeSettings(Settings &Settings);
+
+void initSettings();
