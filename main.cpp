@@ -23,8 +23,8 @@ int main()
     resolution = settingsGetScreenWidth(settings);
   }
 
-  const int screenWidth{resolution.x};
-  const int screenHeight{resolution.y};
+  int screenWidth{resolution.x};
+  int screenHeight{resolution.y};
   const int placeToBorder{30};
 
   const float movementSpeed{10};
@@ -131,8 +131,17 @@ int main()
   else if (settings.screen == Fullscreen)
     strncpy(screenInput, "Fullscreen", 63);
 
-  char resolutionInput[64] = {0};
-  strncpy(resolutionInput, settings.resolution.c_str(), 63);
+  const char *resolutionOptions = "1920x1080;1600x900;1280x720;1024x768";
+  int resolutionActive = 0;
+
+  if (settings.resolution == "1920x1080")
+    resolutionActive = 0;
+  else if (settings.resolution == "1600x900")
+    resolutionActive = 1;
+  else if (settings.resolution == "1280x720")
+    resolutionActive = 2;
+  else if (settings.resolution == "1024x768")
+    resolutionActive = 3;
 
   char backgroundInput[64] = {0};
   strncpy(backgroundInput, settings.background.c_str(), 63);
@@ -432,13 +441,56 @@ int main()
       if (GuiTextBox({generalBoxStartX, GetBoxY(9), (float)boxWidth, (float)boxHeight}, screenInput, 64, screenEdit))
         screenEdit = !screenEdit;
 
-      DrawText("Resolution:", generalTextStartX, placeToBorder * 12, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(12), (float)boxWidth, (float)boxHeight}, resolutionInput, 64, resolutionEdit))
-        resolutionEdit = !resolutionEdit;
-
-      DrawText("Background:", generalTextStartX, placeToBorder * 15, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(15), (float)boxWidth, (float)boxHeight}, backgroundInput, 64, backgroundEdit))
+      DrawText("Background:", generalTextStartX, placeToBorder * 12, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(12), (float)boxWidth, (float)boxHeight}, backgroundInput, 64, backgroundEdit))
         backgroundEdit = !backgroundEdit;
+
+      int previousResolutionActive = resolutionActive;
+
+      DrawText("Resolution:", generalTextStartX, placeToBorder * 15, settingsFontTextSize, WHITE);
+      if (GuiDropdownBox({generalBoxStartX, GetBoxY(15), (float)boxWidth, (float)boxHeight}, resolutionOptions, &resolutionActive, resolutionEdit))
+      {
+        resolutionEdit = !resolutionEdit;
+      }
+
+      if (resolutionActive != previousResolutionActive)
+      {
+        if (resolutionActive == 0)
+          settings.resolution = "1920x1080";
+        else if (resolutionActive == 1)
+          settings.resolution = "1600x900";
+        else if (resolutionActive == 2)
+          settings.resolution = "1280x720";
+        else if (resolutionActive == 3)
+          settings.resolution = "1024x768";
+
+        resolution = settingsGetScreenWidth(settings);
+        screenWidth = resolution.x;
+        screenHeight = resolution.y;
+
+        SetWindowSize(screenWidth, screenHeight);
+
+        // Recenter all buttons for the new screen size
+        startButton.x = screenWidth / 2.0f - startButtonWidth / 2.0f;
+        startButton.y = screenHeight / 2.0f - startButtonHeight / 2.0f;
+        startButtonTextX = startButton.x + (startButton.width - startButtonTextWidth) / 2;
+        startButtonTextY = startButton.y + (startButton.height - startButtonTextFontSize) / 2;
+
+        settingsButton.x = screenWidth / 2.0f - settingsButtonWidth / 2.0f;
+        settingsButton.y = screenHeight / 2.0f + startButtonHeight;
+        settingsButtonTextX = settingsButton.x + (settingsButton.width - settingsButtonTextWidth) / 2;
+        settingsButtonTextY = settingsButton.y + (settingsButton.height - settingsButtonTextFontSize) / 2;
+
+        tutorialButton.x = screenWidth / 2.0f - tutorialButtonWidth / 2.0f;
+        tutorialButton.y = settingsButton.y + settingsButton.height + 20;
+        tutorialButtonTextX = tutorialButton.x + (tutorialButton.width - tutorialButtonTextWidth) / 2;
+        tutorialButtonTextY = tutorialButton.y + (tutorialButton.height - tutorialButtonTextFontSize) / 2;
+
+        settingsBackButton.x = screenWidth / 2.0f - settingsBackButtonWidth / 2.0f;
+        settingsBackButton.y = screenHeight - placeToBorder - settingsBackButtonHeight;
+        settingsBackButtonTextX = settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2;
+        settingsBackButtonTextY = settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2;
+      }
 
       // back button
       DrawRectangleRec(settingsBackButton, GRAY);
@@ -447,7 +499,14 @@ int main()
       if (settingsBackButtonAction)
       {
         settings.shootingSound = shootSoundInput;
-        settings.resolution = resolutionInput;
+        if (resolutionActive == 0)
+          settings.resolution = "1920x1080";
+        else if (resolutionActive == 1)
+          settings.resolution = "1600x900";
+        else if (resolutionActive == 2)
+          settings.resolution = "1280x720";
+        else if (resolutionActive == 3)
+          settings.resolution = "1024x768";
         settings.background = backgroundInput;
         settings.switchSides = (switchSidesInput == "YES" || switchSidesInput == "yes");
 
@@ -459,8 +518,6 @@ int main()
           settings.screen = Fullscreen;
 
         changeSettings(settings);
-
-        resolution = settingsGetScreenWidth(settings);
 
         settingsButtonAction = false;
         settingsBackButtonAction = false;

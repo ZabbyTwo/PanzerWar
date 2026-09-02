@@ -15,9 +15,9 @@
 
 +make settings work via settings file
     +load settings
-    -use settings in game, all of them
     +make settings changeable
     +save changes
+    -use settings in game, all of them
     -make settings generally take over 
 
 -add quit button on home screen
