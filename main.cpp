@@ -102,6 +102,21 @@ int main()
   float settingsBackButtonTextX{settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2};
   float settingsBackButtonTextY{settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2};
 
+  // tutorial button
+  const int tutorialButtonWidth{450};
+  const int tutorialButtonHeight{150};
+  Rectangle tutorialButton{screenWidth / 2.0f - tutorialButtonWidth / 2.0f,
+                           settingsButton.y + settingsButton.height + 20,
+                           (float)tutorialButtonWidth,
+                           (float)tutorialButtonHeight};
+  bool tutorialButtonAction{false};
+  int tutorialButtonState{0};
+  const char *tutorialButtonText{"HOW TO PLAY"};
+  int tutorialButtonTextFontSize{60};
+  int tutorialButtonTextWidth{MeasureText(tutorialButtonText, tutorialButtonTextFontSize)};
+  float tutorialButtonTextX{tutorialButton.x + (tutorialButton.width - tutorialButtonTextWidth) / 2};
+  float tutorialButtonTextY{tutorialButton.y + (tutorialButton.height - tutorialButtonTextFontSize) / 2};
+
   char shootSoundInput[64] = {0};
   strncpy(shootSoundInput, settings.shootingSound.c_str(), 63);
 
@@ -140,19 +155,16 @@ int main()
   {
     mousePoint = GetMousePosition();
 
-    if (!startButtonAction && !settingsButtonAction)
+    // Main Menu check
+    if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction)
     {
       // start button
       if (CheckCollisionPointRec(mousePoint, startButton))
       {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        {
           startButtonState = 2;
-        }
         else
-        {
           startButtonState = 1;
-        }
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
@@ -165,17 +177,31 @@ int main()
         startButtonState = 0;
       }
 
+      // tutorial button
+      if (CheckCollisionPointRec(mousePoint, tutorialButton))
+      {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+          tutorialButtonState = 2;
+        else
+          tutorialButtonState = 1;
+
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+          tutorialButtonAction = true;
+        }
+      }
+      else
+      {
+        tutorialButtonState = 0;
+      }
+
       // settings button
       if (CheckCollisionPointRec(mousePoint, settingsButton))
       {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        {
           settingsButtonState = 2;
-        }
         else
-        {
           settingsButtonState = 1;
-        }
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
@@ -187,24 +213,41 @@ int main()
         settingsButtonState = 0;
       }
     }
-
-    if (settingsButtonAction)
+    // Settings Menu check
+    else if (settingsButtonAction)
     {
       // settings back button
       if (CheckCollisionPointRec(mousePoint, settingsBackButton))
       {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        {
           settingsBackButtonState = 2;
-        }
         else
-        {
           settingsBackButtonState = 1;
-        }
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
           settingsBackButtonAction = true;
+        }
+      }
+      else
+      {
+        settingsBackButtonState = 0;
+      }
+    }
+    // Tutorial Menu check
+    else if (tutorialButtonAction)
+    {
+      // tutorial back button
+      if (CheckCollisionPointRec(mousePoint, settingsBackButton))
+      {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+          settingsBackButtonState = 2;
+        else
+          settingsBackButtonState = 1;
+
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+          tutorialButtonAction = false; // Directly close the tutorial menu
         }
       }
       else
@@ -305,13 +348,16 @@ int main()
     BeginDrawing();
     ClearBackground(BLACK);
 
-    if (!startButtonAction && !settingsButtonAction)
+    if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction)
     {
       DrawRectangleRec(startButton, GREEN);
       DrawText(startButtonText, startButtonTextX, startButtonTextY, startButtonTextFontSize, BLACK);
 
       DrawRectangleRec(settingsButton, YELLOW);
       DrawText(settingsButtonText, settingsButtonTextX, settingsButtonTextY, settingsButtonTextFontSize, BLACK);
+
+      DrawRectangleRec(tutorialButton, SKYBLUE);
+      DrawText(tutorialButtonText, tutorialButtonTextX, tutorialButtonTextY, tutorialButtonTextFontSize, BLACK);
     }
 
     if (startButtonAction)
@@ -371,33 +417,33 @@ int main()
       // general settings
       float widestGeneralLabel = MeasureText("Shooting Sound: ", settingsFontTextSize);
       float totalGeneralWidth = widestGeneralLabel + 20 + boxWidth;
-
       float generalTextStartX = (GetScreenWidth() / 2.0f) - (totalGeneralWidth / 2.0f);
       float generalBoxStartX = generalTextStartX + widestGeneralLabel + 20;
 
-      DrawText("Shooting Sound:", generalTextStartX, placeToBorder * 10, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(10), (float)boxWidth, (float)boxHeight}, shootSoundInput, 64, soundEdit))
+      DrawText("Shooting Sound:", generalTextStartX, placeToBorder * 3, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(3), (float)boxWidth, (float)boxHeight}, shootSoundInput, 64, soundEdit))
         soundEdit = !soundEdit;
 
-      DrawText("Switch Sides:", generalTextStartX, placeToBorder * 13, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(13), (float)boxWidth, (float)boxHeight}, switchSidesInput, 64, switchSidesEdit))
+      DrawText("Switch Sides:", generalTextStartX, placeToBorder * 6, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(6), (float)boxWidth, (float)boxHeight}, switchSidesInput, 64, switchSidesEdit))
         switchSidesEdit = !switchSidesEdit;
 
-      DrawText("Screen:", generalTextStartX, placeToBorder * 16, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(16), (float)boxWidth, (float)boxHeight}, screenInput, 64, screenEdit))
+      DrawText("Screen:", generalTextStartX, placeToBorder * 9, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(9), (float)boxWidth, (float)boxHeight}, screenInput, 64, screenEdit))
         screenEdit = !screenEdit;
 
-      DrawText("Resolution:", generalTextStartX, placeToBorder * 19, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(19), (float)boxWidth, (float)boxHeight}, resolutionInput, 64, resolutionEdit))
+      DrawText("Resolution:", generalTextStartX, placeToBorder * 12, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(12), (float)boxWidth, (float)boxHeight}, resolutionInput, 64, resolutionEdit))
         resolutionEdit = !resolutionEdit;
 
-      DrawText("Background:", generalTextStartX, placeToBorder * 22, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(22), (float)boxWidth, (float)boxHeight}, backgroundInput, 64, backgroundEdit))
+      DrawText("Background:", generalTextStartX, placeToBorder * 15, settingsFontTextSize, WHITE);
+      if (GuiTextBox({generalBoxStartX, GetBoxY(15), (float)boxWidth, (float)boxHeight}, backgroundInput, 64, backgroundEdit))
         backgroundEdit = !backgroundEdit;
 
       // back button
       DrawRectangleRec(settingsBackButton, GRAY);
       DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
+
       if (settingsBackButtonAction)
       {
         settings.shootingSound = shootSoundInput;
@@ -420,6 +466,26 @@ int main()
         settingsBackButtonAction = false;
       }
     }
+
+    // tutorial menu
+    if (tutorialButtonAction)
+    {
+      DrawText("HOW TO PLAY", screenWidth / 2 - MeasureText("HOW TO PLAY", 80) / 2, 50, 80, WHITE);
+
+      DrawText("PLAYER 1 (BLUE)", 100, 200, 60, BLUE);
+      DrawText("W - Move Up", 100, 300, 40, WHITE);
+      DrawText("S - Move Down", 100, 360, 40, WHITE);
+      DrawText("D - Shoot", 100, 420, 40, WHITE);
+
+      DrawText("PLAYER 2 (RED)", screenWidth - 600, 200, 60, RED);
+      DrawText("UP Arrow - Move Up", screenWidth - 600, 300, 40, WHITE);
+      DrawText("DOWN Arrow - Move Down", screenWidth - 600, 360, 40, WHITE);
+      DrawText("LEFT Arrow - Shoot", screenWidth - 600, 420, 40, WHITE);
+
+      DrawRectangleRec(settingsBackButton, GRAY);
+      DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
+    }
+
     EndDrawing();
   }
 
