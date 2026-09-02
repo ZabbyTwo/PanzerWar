@@ -1,3 +1,7 @@
-main
+*.exe
+
 *.o
-*.out
+*.obj
+
+build/
+bin/
