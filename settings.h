@@ -22,16 +22,6 @@ struct Resolution
 
 struct Settings
 {
-    // panzer 1 settings
-    std::string moveUpP1;
-    std::string moveDownP1;
-    std::string shootP1;
-
-    // panzer 2 settings
-    std::string moveUpP2;
-    std::string moveDownP2;
-    std::string shootP2;
-
     // general settings
     std::string shootingSound;
     bool switchSides;

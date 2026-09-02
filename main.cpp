@@ -102,25 +102,6 @@ int main()
   float settingsBackButtonTextX{settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2};
   float settingsBackButtonTextY{settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2};
 
-  // settings inputs and states
-  char moveUpP1Input[64] = {0};
-  strncpy(moveUpP1Input, settings.moveUpP1.c_str(), 63);
-
-  char moveDownP1Input[64] = {0};
-  strncpy(moveDownP1Input, settings.moveDownP1.c_str(), 63);
-
-  char shootP1Input[64] = {0};
-  strncpy(shootP1Input, settings.shootP1.c_str(), 63);
-
-  char moveUpP2Input[64] = {0};
-  strncpy(moveUpP2Input, settings.moveUpP2.c_str(), 63);
-
-  char moveDownP2Input[64] = {0};
-  strncpy(moveDownP2Input, settings.moveDownP2.c_str(), 63);
-
-  char shootP2Input[64] = {0};
-  strncpy(shootP2Input, settings.shootP2.c_str(), 63);
-
   char shootSoundInput[64] = {0};
   strncpy(shootSoundInput, settings.shootingSound.c_str(), 63);
 
@@ -142,14 +123,6 @@ int main()
   strncpy(backgroundInput, settings.background.c_str(), 63);
 
   // edit states for GuiTextBox
-  bool moveUpEditP1 = false;
-  bool moveDownEditP1 = false;
-  bool shootEditP1 = false;
-
-  bool moveUpEditP2 = false;
-  bool moveDownEditP2 = false;
-  bool shootEditP2 = false;
-
   bool soundEdit = false;
   bool switchSidesEdit = false;
   bool screenEdit = false;
@@ -395,33 +368,6 @@ int main()
         return textY + (settingsFontTextSize / 2.0f) - (boxHeight / 2.0f);
       };
 
-      // panzer settings
-      // panzer 1
-      DrawText("Move up P1:", placeToBorder, placeToBorder * 1, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX, GetBoxY(1), (float)boxWidthPanzer, (float)boxHeight}, moveUpP1Input, 64, moveUpEditP1))
-        moveUpEditP1 = !moveUpEditP1;
-
-      DrawText("Move down P1:", placeToBorder, placeToBorder * 4, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX, GetBoxY(4), (float)boxWidthPanzer, (float)boxHeight}, moveDownP1Input, 64, moveDownEditP1))
-        moveDownEditP1 = !moveDownEditP1;
-
-      DrawText("Shoot P1:", placeToBorder, placeToBorder * 7, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX, GetBoxY(7), (float)boxWidthPanzer, (float)boxHeight}, shootP1Input, 64, shootEditP1))
-        shootEditP1 = !shootEditP1;
-
-      // panzer 2
-      DrawText("Move up P2:", placeToBorder + boxStartX * 2, placeToBorder * 1, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX * 3, GetBoxY(1), (float)boxWidthPanzer, (float)boxHeight}, moveUpP2Input, 64, moveUpEditP2))
-        moveUpEditP2 = !moveUpEditP2;
-
-      DrawText("Move down P2:", placeToBorder + boxStartX * 2, placeToBorder * 4, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX * 3, GetBoxY(4), (float)boxWidthPanzer, (float)boxHeight}, moveDownP2Input, 64, moveDownEditP2))
-        moveDownEditP2 = !moveDownEditP2;
-
-      DrawText("Shoot P2:", placeToBorder + boxStartX * 2, placeToBorder * 7, settingsFontTextSize, WHITE);
-      if (GuiTextBox({boxStartX * 3, GetBoxY(7), (float)boxWidthPanzer, (float)boxHeight}, shootP2Input, 64, shootEditP2))
-        shootEditP2 = !shootEditP2;
-
       // general settings
       float widestGeneralLabel = MeasureText("Shooting Sound: ", settingsFontTextSize);
       float totalGeneralWidth = widestGeneralLabel + 20 + boxWidth;
@@ -454,14 +400,6 @@ int main()
       DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
       if (settingsBackButtonAction)
       {
-        settings.moveUpP1 = moveUpP1Input;
-        settings.moveDownP1 = moveDownP1Input;
-        settings.shootP1 = shootP1Input;
-
-        settings.moveUpP2 = moveUpP2Input;
-        settings.moveDownP2 = moveDownP2Input;
-        settings.shootP2 = shootP2Input;
-
         settings.shootingSound = shootSoundInput;
         settings.resolution = resolutionInput;
         settings.background = backgroundInput;
