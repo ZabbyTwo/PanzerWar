@@ -42,3 +42,5 @@ void changeSettings(Settings &Settings);
 void initSettings();
 
 std::vector<std::string> getAvailableSounds();
+
+std::vector<std::string> getAvailableBackgrounds();

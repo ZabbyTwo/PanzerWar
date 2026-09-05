@@ -47,6 +47,53 @@ int main()
 
   Sound currentShootSound = LoadSound(settings.shootingSound.c_str());
 
+  auto GetColorFromString = [](std::string colorStr) -> Color {
+    if (colorStr == "WHITE") return WHITE;
+    if (colorStr == "GRAY") return GRAY;
+    if (colorStr == "LIGHTGRAY") return LIGHTGRAY;
+    if (colorStr == "YELLOW") return YELLOW;
+    if (colorStr == "GOLD") return GOLD;
+    if (colorStr == "ORANGE") return ORANGE;
+    if (colorStr == "PINK") return PINK;
+    if (colorStr == "MAROON") return MAROON;
+    if (colorStr == "GREEN") return GREEN;
+    if (colorStr == "LIME") return LIME;
+    if (colorStr == "DARKGREEN") return DARKGREEN;
+    if (colorStr == "SKYBLUE") return SKYBLUE;
+    if (colorStr == "DARKBLUE") return DARKBLUE;
+    if (colorStr == "PURPLE") return PURPLE;
+    if (colorStr == "VIOLET") return VIOLET;
+    if (colorStr == "DARKPURPLE") return DARKPURPLE;
+    if (colorStr == "BEIGE") return BEIGE;
+    if (colorStr == "BROWN") return BROWN;
+    if (colorStr == "DARKBROWN") return DARKBROWN;
+    if (colorStr == "MAGENTA") return MAGENTA;
+    return BLACK;
+  };
+
+  Texture2D bgTexture = {0};
+  bool useBgTexture = false;
+  Color bgColor = BLACK;
+
+  auto LoadNewBackground = [&](std::string bgStr) {
+    if (useBgTexture)
+    {
+      UnloadTexture(bgTexture);
+      useBgTexture = false;
+    }
+    if (bgStr.find('.') != std::string::npos)
+    {
+      bgTexture = LoadTexture(bgStr.c_str());
+      useBgTexture = true;
+    }
+    else
+    {
+      bgColor = GetColorFromString(bgStr);
+    }
+  };
+
+  LoadNewBackground(settings.background);
+
   // panzer 1
   Vector2 panzerSize1{200.0f, 100.0f};
   Vector2 panzerPosition1{(float)placeToBorder, screenHeight / 2.0f};
@@ -175,6 +222,25 @@ int main()
       break;
     }
   }
+
+  std::vector<std::string> availableBackgrounds = getAvailableBackgrounds();
+
+  int backgroundActive = 0;
+  for (size_t i = 0; i < availableBackgrounds.size(); i++)
+  {
+    std::string matchStr = availableBackgrounds[i];
+    if (matchStr.find('.') != std::string::npos)
+    {
+      matchStr = "../resources/" + matchStr;
+    }
+
+    if (matchStr == settings.background)
+    {
+      backgroundActive = i;
+      break;
+    }
+  }
+
   while (!WindowShouldClose())
   {
     mousePoint = GetMousePosition();
@@ -271,7 +337,7 @@ int main()
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
-          tutorialButtonAction = false; // Directly close the tutorial menu
+          tutorialButtonAction = false;
         }
       }
       else
@@ -376,7 +442,25 @@ int main()
     }
 
     BeginDrawing();
-    ClearBackground(BLACK);
+    
+    if (startButtonAction)
+    {
+      if (useBgTexture)
+      {
+        ClearBackground(BLACK);
+        Rectangle sourceRec = { 0.0f, 0.0f, (float)bgTexture.width, (float)bgTexture.height };
+        Rectangle destRec = { 0.0f, 0.0f, (float)screenWidth, (float)screenHeight };
+        DrawTexturePro(bgTexture, sourceRec, destRec, { 0.0f, 0.0f }, 0.0f, WHITE);
+      }
+      else
+      {
+        ClearBackground(bgColor);
+      }
+    }
+    else
+    {
+      ClearBackground(BLACK);
+    }
 
     if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction)
     {
@@ -427,6 +511,7 @@ int main()
       }
     }
 
+    // settings menu
     if (settingsButtonAction)
     {
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
@@ -443,6 +528,7 @@ int main()
         return textY + (settingsFontTextSize / 2.0f) - (boxHeight / 2.0f);
       };
 
+      // general settings
       float widestGeneralLabel = MeasureText("Shooting Sound: ", settingsFontTextSize);
       float totalGeneralWidth = widestGeneralLabel + 20 + boxWidth;
       float generalTextStartX = (GetScreenWidth() / 2.0f) - (totalGeneralWidth / 2.0f);
@@ -500,8 +586,12 @@ int main()
       }
 
       DrawText("Background:", generalTextStartX, placeToBorder * 12, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(12), (float)boxWidth, (float)boxHeight}, backgroundInput, 64, backgroundEdit))
-        backgroundEdit = !backgroundEdit;
+      if (GuiButton({generalBoxStartX, GetBoxY(12), (float)boxWidth, (float)boxHeight}, availableBackgrounds[backgroundActive].c_str()))
+      {
+        backgroundActive++;
+        if (backgroundActive >= availableBackgrounds.size())
+          backgroundActive = 0;
+      }
 
       int previousResolutionActive = resolutionActive;
       const char *currentResolutionText = (resolutionActive == 0) ? "1920x1080" : (resolutionActive == 1) ? "1600x900"
@@ -554,6 +644,7 @@ int main()
         settingsBackButtonTextY = settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2;
       }
 
+      // back button
       DrawRectangleRec(settingsBackButton, GRAY);
       DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
 
@@ -569,7 +660,16 @@ int main()
         else if (resolutionActive == 3)
           settings.resolution = "1024x768";
 
-        settings.background = backgroundInput;
+        std::string bgToSave = availableBackgrounds[backgroundActive];
+        if (bgToSave.find('.') != std::string::npos)
+        {
+          settings.background = "../resources/" + bgToSave;
+        }
+        else
+        {
+          settings.background = bgToSave;
+        }
+
         settings.switchSides = (std::string(switchSidesInput) == "YES");
 
         if (screenActive == 0)
@@ -583,6 +683,8 @@ int main()
 
         UnloadSound(currentShootSound);
         currentShootSound = LoadSound(settings.shootingSound.c_str());
+
+        LoadNewBackground(settings.background);
 
         settingsButtonAction = false;
         settingsBackButtonAction = false;
@@ -613,6 +715,8 @@ int main()
 
   UnloadSound(currentShootSound);
   CloseAudioDevice();
+
+  if (useBgTexture) UnloadTexture(bgTexture);
 
   return 0;
 }

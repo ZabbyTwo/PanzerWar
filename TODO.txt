@@ -19,10 +19,8 @@
     +save changes
     +make settings generally take over 
     +switch sides should be a button when clicked it changes from no to yes and vice versa
-    -make background.png work
-    -make shooting sound work
-
--fix scaling when resolution changes
+    +make background.png work
+    +make shooting sound work
 
 -add quit button on home screen
 
@@ -36,20 +34,21 @@
 
 -after match finished ask, Replay(Play again) or To Home Screen
 
--make buttons do sth when hover
-
 -sprites
     -panzers
     -rounds
 
--home menu music
+-make btns cooler
+    -when hover do sth
 
 -sound effects
-    -shooting -> and make the setting work
-    -button clicks/hovers
+    -button clicks/hovers -> tank hangar sounds
     -changes, eg in settings
+
+-fix scaling when resolution changes
 
 -cleanup code
     -buttons in classes and button logics
+    -optimize it
 
 -add makefile

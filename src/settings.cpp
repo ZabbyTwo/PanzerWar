@@ -15,7 +15,7 @@ Settings loadSettings()
         int pos = row.find('=');
         std::string key = row.substr(0, pos);
         std::string value = row.substr(pos + 1);
-
+  
         // general settings
         if (key == "shootingSound")
         {
@@ -137,4 +137,45 @@ std::vector<std::string> getAvailableSounds()
     }
 
     return availableSounds;
+}
+
+std::vector<std::string> getAvailableBackgrounds()
+{
+    std::vector<std::string> availableBackgrounds;
+
+    availableBackgrounds.push_back("BLACK");
+    availableBackgrounds.push_back("WHITE");
+    availableBackgrounds.push_back("GRAY");
+    availableBackgrounds.push_back("LIGHTGRAY");
+    availableBackgrounds.push_back("YELLOW");
+    availableBackgrounds.push_back("GOLD");
+    availableBackgrounds.push_back("ORANGE");
+    availableBackgrounds.push_back("PINK");
+    availableBackgrounds.push_back("MAROON");
+    availableBackgrounds.push_back("GREEN");
+    availableBackgrounds.push_back("LIME");
+    availableBackgrounds.push_back("DARKGREEN");
+    availableBackgrounds.push_back("SKYBLUE");
+    availableBackgrounds.push_back("DARKBLUE");
+    availableBackgrounds.push_back("PURPLE");
+    availableBackgrounds.push_back("VIOLET");
+    availableBackgrounds.push_back("DARKPURPLE");
+    availableBackgrounds.push_back("BEIGE");
+    availableBackgrounds.push_back("BROWN");
+    availableBackgrounds.push_back("DARKBROWN");
+    availableBackgrounds.push_back("MAGENTA");
+
+    for (const auto &entry : std::filesystem::directory_iterator("../resources/"))
+    {
+        if (entry.is_regular_file())
+        {
+            std::string ext = entry.path().extension().string();
+            if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
+            {
+                availableBackgrounds.push_back(entry.path().filename().string());
+            }
+        }
+    }
+
+    return availableBackgrounds;
 }
