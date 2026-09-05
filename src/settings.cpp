@@ -7,7 +7,7 @@ Settings loadSettings()
 {
     std::string row;
     Settings loaded;
-    std::ifstream settingsFile("resources/settings.txt");
+    std::ifstream settingsFile("../resources/settings.txt");
 
     while (getline(settingsFile, row))
     {
@@ -90,10 +90,10 @@ void changeSettings(Settings &Settings)
 {
     // clears the complete settings file so it can be rewritten
     std::ofstream clearSettings;
-    clearSettings.open("resources/settings.txt", std::ofstream::out | std::ofstream::trunc);
+    clearSettings.open("../resources/settings.txt", std::ofstream::out | std::ofstream::trunc);
     clearSettings.close();
 
-    std::ofstream writeIn{"resources/settings.txt"};
+    std::ofstream writeIn{"../resources/settings.txt"};
 
     writeIn << "shootingSound=" << Settings.shootingSound << '\n';
     writeIn << "switchSides=" << (Settings.switchSides ? "YES" : "NO") << '\n';
@@ -111,7 +111,7 @@ void changeSettings(Settings &Settings)
 
 void initSettings()
 {
-    std::ofstream writeIn{"resources/settings.txt"};
+    std::ofstream writeIn{"../resources/settings.txt"};
 
     writeIn << "shootingSound=" << "resources/shoot.wav" << '\n';
     writeIn << "switchSides=" << "NO" << '\n';
