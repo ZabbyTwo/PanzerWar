@@ -18,8 +18,9 @@
     +make settings changeable
     +save changes
     +make settings generally take over 
-    -switch sides should be a button when clicked it changes from no to yes and vice versa
+    +switch sides should be a button when clicked it changes from no to yes and vice versa
     -make background.png work
+    -make shooting sound work
 
 -fix scaling when resolution changes
 

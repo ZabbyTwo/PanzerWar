@@ -166,7 +166,7 @@ int main()
   int soundActive = 0;
   for (size_t i = 0; i < availableSounds.size(); i++)
   {
-    if (availableSounds[i] == settings.shootingSound)
+    if ("resources/" + availableSounds[i] == settings.shootingSound)
     {
       soundActive = i;
       break;
@@ -551,7 +551,7 @@ int main()
 
       if (settingsBackButtonAction)
       {
-        settings.shootingSound = availableSounds[soundActive];
+        settings.shootingSound = "resources/" + availableSounds[soundActive];
         if (resolutionActive == 0)
           settings.resolution = "1920x1080";
         else if (resolutionActive == 1)

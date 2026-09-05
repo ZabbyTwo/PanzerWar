@@ -144,7 +144,7 @@ std::vector<std::string> getAvailableSounds()
 
     if (availableSounds.empty())
     {
-        availableSounds.push_back("resources/shoot.mp3");
+        availableSounds.push_back("shoot.mp3");
     }
 
     return availableSounds;
