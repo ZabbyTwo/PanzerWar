@@ -161,6 +161,18 @@ int main()
 
   Vector2 mousePoint = {0.f, 0.f};
 
+  std::vector<std::string> availableSounds = getAvailableSounds();
+
+  int soundActive = 0;
+  for (size_t i = 0; i < availableSounds.size(); i++)
+  {
+    if (availableSounds[i] == settings.shootingSound)
+    {
+      soundActive = i;
+      break;
+    }
+  }
+
   while (!WindowShouldClose())
   {
     mousePoint = GetMousePosition();
@@ -407,7 +419,6 @@ int main()
       }
     }
 
-    // settings menu
     if (settingsButtonAction)
     {
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
@@ -424,15 +435,18 @@ int main()
         return textY + (settingsFontTextSize / 2.0f) - (boxHeight / 2.0f);
       };
 
-      // general settings
       float widestGeneralLabel = MeasureText("Shooting Sound: ", settingsFontTextSize);
       float totalGeneralWidth = widestGeneralLabel + 20 + boxWidth;
       float generalTextStartX = (GetScreenWidth() / 2.0f) - (totalGeneralWidth / 2.0f);
       float generalBoxStartX = generalTextStartX + widestGeneralLabel + 20;
 
       DrawText("Shooting Sound:", generalTextStartX, placeToBorder * 3, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(3), (float)boxWidth, (float)boxHeight}, shootSoundInput, 64, soundEdit))
-        soundEdit = !soundEdit;
+      if (GuiButton({generalBoxStartX, GetBoxY(3), (float)boxWidth, (float)boxHeight}, availableSounds[soundActive].c_str()))
+      {
+        soundActive++;
+        if (soundActive >= availableSounds.size())
+          soundActive = 0;
+      }
 
       DrawText("Switch Sides:", generalTextStartX, placeToBorder * 6, settingsFontTextSize, WHITE);
       if (GuiButton({generalBoxStartX, GetBoxY(6), (float)boxWidth, (float)boxHeight}, switchSidesInput))
@@ -532,13 +546,12 @@ int main()
         settingsBackButtonTextY = settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2;
       }
 
-      // back button
       DrawRectangleRec(settingsBackButton, GRAY);
       DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
 
       if (settingsBackButtonAction)
       {
-        settings.shootingSound = shootSoundInput;
+        settings.shootingSound = availableSounds[soundActive];
         if (resolutionActive == 0)
           settings.resolution = "1920x1080";
         else if (resolutionActive == 1)

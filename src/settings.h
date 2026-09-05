@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 enum Screen
 {
@@ -39,3 +40,5 @@ Resolution settingsGetScreenWidth(Settings &settings);
 void changeSettings(Settings &Settings);
 
 void initSettings();
+
+std::vector<std::string> getAvailableSounds();

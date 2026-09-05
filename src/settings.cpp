@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <filesystem>
 #include "settings.h"
 
 Settings loadSettings()
@@ -118,4 +119,33 @@ void initSettings()
     writeIn << "screen=" << "Windowed" << '\n';
     writeIn << "resolution=" << "1920x1080" << '\n';
     writeIn << "background=" << "resources/default.png" << '\n';
+}
+
+std::vector<std::string> getAvailableSounds()
+{
+    std::vector<std::string> availableSounds;
+    try
+    {
+        for (const auto &entry : std::filesystem::directory_iterator("../resources/"))
+        {
+            if (entry.is_regular_file())
+            {
+                std::string ext = entry.path().extension().string();
+                if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
+                {
+                    availableSounds.push_back(entry.path().filename().string());
+                }
+            }
+        }
+    }
+    catch (...)
+    {
+    }
+
+    if (availableSounds.empty())
+    {
+        availableSounds.push_back("resources/shoot.mp3");
+    }
+
+    return availableSounds;
 }
