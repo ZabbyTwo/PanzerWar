@@ -113,7 +113,7 @@ void initSettings()
 {
     std::ofstream writeIn{"../resources/settings.txt"};
 
-    writeIn << "shootingSound=" << "resources/shoot.wav" << '\n';
+    writeIn << "shootingSound=" << "resources/shoot.mp3" << '\n';
     writeIn << "switchSides=" << "NO" << '\n';
     writeIn << "screen=" << "Windowed" << '\n';
     writeIn << "resolution=" << "1920x1080" << '\n';

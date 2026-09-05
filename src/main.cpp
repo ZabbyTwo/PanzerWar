@@ -123,7 +123,7 @@ int main()
   char switchSidesInput[64] = {0};
   strncpy(switchSidesInput, settings.switchSides ? "YES" : "NO", 63);
 
-  const char *screenOptions = "Windowed;Borderless Window;Fullscreen";
+  const char *screenOptions = "Windowed;Borderless;Fullscreen";
   int screenActive = 0;
 
   if (settings.screen == Windowed)
@@ -150,7 +150,6 @@ int main()
 
   // edit states for GuiTextBox
   bool soundEdit = false;
-  bool switchSidesEdit = false;
   bool screenEdit = false;
   bool resolutionEdit = false;
   bool backgroundEdit = false;
@@ -383,7 +382,7 @@ int main()
         // for panzer1
         if (!panzer1.getIsPanzerHit())
         {
-          DrawRectangleV(panzer1.getPanzerPosition(), panzer1.getPanzerSize(), BLUE);
+          DrawRectangleV(panzer1.getPanzerPosition(), panzer1.getPanzerSize(), settings.switchSides ? RED : BLUE);
           for (Vector2 bullet : panzer1.getPanzerBullets())
           {
             DrawCircleV(bullet, 20, YELLOW);
@@ -396,7 +395,7 @@ int main()
         // for panzer2
         if (!panzer2.getIsPanzerHit())
         {
-          DrawRectangleV(panzer2.getPanzerPosition(), panzer2.getPanzerSize(), RED);
+          DrawRectangleV(panzer2.getPanzerPosition(), panzer2.getPanzerSize(), settings.switchSides ? BLUE : RED);
           for (Vector2 bullet : panzer2.getPanzerBullets())
           {
             DrawCircleV(bullet, 20, YELLOW);
@@ -413,7 +412,7 @@ int main()
     {
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
 
-      int boxWidth = 400;
+      int boxWidth = 600;
       int boxWidthPanzer = 200;
       int boxHeight = settingsFontTextSize + 15;
 
@@ -436,32 +435,37 @@ int main()
         soundEdit = !soundEdit;
 
       DrawText("Switch Sides:", generalTextStartX, placeToBorder * 6, settingsFontTextSize, WHITE);
-      if (GuiTextBox({generalBoxStartX, GetBoxY(6), (float)boxWidth, (float)boxHeight}, switchSidesInput, 64, switchSidesEdit))
-        switchSidesEdit = !switchSidesEdit;
+      if (GuiButton({generalBoxStartX, GetBoxY(6), (float)boxWidth, (float)boxHeight}, switchSidesInput))
+      {
+        if (strcmp(switchSidesInput, "YES") == 0) strncpy(switchSidesInput, "NO", 63);
+        else strncpy(switchSidesInput, "YES", 63);
+      }
 
       int previousScreenActive = screenActive;
+      const char* currentScreenText = (screenActive == 0) ? "Windowed" : (screenActive == 1) ? "Borderless Window" : "Fullscreen";
+      
       DrawText("Screen:", generalTextStartX, placeToBorder * 9, settingsFontTextSize, WHITE);
-      if (GuiDropdownBox({generalBoxStartX, GetBoxY(9), (float)boxWidth, (float)boxHeight}, screenOptions, &screenActive, screenEdit))
+      if (GuiButton({generalBoxStartX, GetBoxY(9), (float)boxWidth, (float)boxHeight}, currentScreenText))
       {
-        screenEdit = !screenEdit;
+        screenActive++;
+        if (screenActive > 2) screenActive = 0;
       }
 
       if (screenActive != previousScreenActive)
       {
-        if (IsWindowFullscreen())
-          ToggleFullscreen();
+        if (IsWindowFullscreen()) ToggleFullscreen();
 
-        if (screenActive == 0) // Windowed
+        if (screenActive == 0)
         {
           ClearWindowState(FLAG_WINDOW_UNDECORATED);
           SetWindowSize(screenWidth, screenHeight);
         }
-        else if (screenActive == 1) // Borderless Window
+        else if (screenActive == 1)
         {
           SetWindowState(FLAG_WINDOW_UNDECORATED);
           SetWindowSize(screenWidth, screenHeight);
         }
-        else if (screenActive == 2) // Fullscreen
+        else if (screenActive == 2)
         {
           ClearWindowState(FLAG_WINDOW_UNDECORATED);
           ToggleFullscreen();
@@ -473,23 +477,21 @@ int main()
         backgroundEdit = !backgroundEdit;
 
       int previousResolutionActive = resolutionActive;
+      const char* currentResolutionText = (resolutionActive == 0) ? "1920x1080" : (resolutionActive == 1) ? "1600x900" : (resolutionActive == 2) ? "1280x720" : "1024x768";
 
       DrawText("Resolution:", generalTextStartX, placeToBorder * 15, settingsFontTextSize, WHITE);
-      if (GuiDropdownBox({generalBoxStartX, GetBoxY(15), (float)boxWidth, (float)boxHeight}, resolutionOptions, &resolutionActive, resolutionEdit))
+      if (GuiButton({generalBoxStartX, GetBoxY(15), (float)boxWidth, (float)boxHeight}, currentResolutionText))
       {
-        resolutionEdit = !resolutionEdit;
+        resolutionActive++;
+        if (resolutionActive > 3) resolutionActive = 0;
       }
 
       if (resolutionActive != previousResolutionActive)
       {
-        if (resolutionActive == 0)
-          settings.resolution = "1920x1080";
-        else if (resolutionActive == 1)
-          settings.resolution = "1600x900";
-        else if (resolutionActive == 2)
-          settings.resolution = "1280x720";
-        else if (resolutionActive == 3)
-          settings.resolution = "1024x768";
+        if (resolutionActive == 0) settings.resolution = "1920x1080";
+        else if (resolutionActive == 1) settings.resolution = "1600x900";
+        else if (resolutionActive == 2) settings.resolution = "1280x720";
+        else if (resolutionActive == 3) settings.resolution = "1024x768";
 
         resolution = settingsGetScreenWidth(settings);
         screenWidth = resolution.x;
@@ -525,23 +527,17 @@ int main()
       if (settingsBackButtonAction)
       {
         settings.shootingSound = shootSoundInput;
-        if (resolutionActive == 0)
-          settings.resolution = "1920x1080";
-        else if (resolutionActive == 1)
-          settings.resolution = "1600x900";
-        else if (resolutionActive == 2)
-          settings.resolution = "1280x720";
-        else if (resolutionActive == 3)
-          settings.resolution = "1024x768";
+        if (resolutionActive == 0) settings.resolution = "1920x1080";
+        else if (resolutionActive == 1) settings.resolution = "1600x900";
+        else if (resolutionActive == 2) settings.resolution = "1280x720";
+        else if (resolutionActive == 3) settings.resolution = "1024x768";
+        
         settings.background = backgroundInput;
-        settings.switchSides = (switchSidesInput == "YES" || switchSidesInput == "yes");
+        settings.switchSides = (std::string(switchSidesInput) == "YES");
 
-        if (screenActive == 0)
-          settings.screen = Windowed;
-        else if (screenActive == 1)
-          settings.screen = BorderlessWindow;
-        else if (screenActive == 2)
-          settings.screen = Fullscreen;
+        if (screenActive == 0) settings.screen = Windowed;
+        else if (screenActive == 1) settings.screen = BorderlessWindow;
+        else if (screenActive == 2) settings.screen = Fullscreen;
 
         changeSettings(settings);
 

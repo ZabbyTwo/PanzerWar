@@ -17,7 +17,7 @@
     +load settings
     +make settings changeable
     +save changes
-    -make settings generally take over 
+    +make settings generally take over 
     -switch sides should be a button when clicked it changes from no to yes and vice versa
     -make background.png work
 
