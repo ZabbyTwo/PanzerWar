@@ -437,23 +437,28 @@ int main()
       DrawText("Switch Sides:", generalTextStartX, placeToBorder * 6, settingsFontTextSize, WHITE);
       if (GuiButton({generalBoxStartX, GetBoxY(6), (float)boxWidth, (float)boxHeight}, switchSidesInput))
       {
-        if (strcmp(switchSidesInput, "YES") == 0) strncpy(switchSidesInput, "NO", 63);
-        else strncpy(switchSidesInput, "YES", 63);
+        if (strcmp(switchSidesInput, "YES") == 0)
+          strncpy(switchSidesInput, "NO", 63);
+        else
+          strncpy(switchSidesInput, "YES", 63);
       }
 
       int previousScreenActive = screenActive;
-      const char* currentScreenText = (screenActive == 0) ? "Windowed" : (screenActive == 1) ? "Borderless Window" : "Fullscreen";
-      
+      const char *currentScreenText = (screenActive == 0) ? "Windowed" : (screenActive == 1) ? "Borderless Window"
+                                                                                             : "Fullscreen";
+
       DrawText("Screen:", generalTextStartX, placeToBorder * 9, settingsFontTextSize, WHITE);
       if (GuiButton({generalBoxStartX, GetBoxY(9), (float)boxWidth, (float)boxHeight}, currentScreenText))
       {
         screenActive++;
-        if (screenActive > 2) screenActive = 0;
+        if (screenActive > 2)
+          screenActive = 0;
       }
 
       if (screenActive != previousScreenActive)
       {
-        if (IsWindowFullscreen()) ToggleFullscreen();
+        if (IsWindowFullscreen())
+          ToggleFullscreen();
 
         if (screenActive == 0)
         {
@@ -477,21 +482,28 @@ int main()
         backgroundEdit = !backgroundEdit;
 
       int previousResolutionActive = resolutionActive;
-      const char* currentResolutionText = (resolutionActive == 0) ? "1920x1080" : (resolutionActive == 1) ? "1600x900" : (resolutionActive == 2) ? "1280x720" : "1024x768";
+      const char *currentResolutionText = (resolutionActive == 0) ? "1920x1080" : (resolutionActive == 1) ? "1600x900"
+                                                                              : (resolutionActive == 2)   ? "1280x720"
+                                                                                                          : "1024x768";
 
       DrawText("Resolution:", generalTextStartX, placeToBorder * 15, settingsFontTextSize, WHITE);
       if (GuiButton({generalBoxStartX, GetBoxY(15), (float)boxWidth, (float)boxHeight}, currentResolutionText))
       {
         resolutionActive++;
-        if (resolutionActive > 3) resolutionActive = 0;
+        if (resolutionActive > 3)
+          resolutionActive = 0;
       }
 
       if (resolutionActive != previousResolutionActive)
       {
-        if (resolutionActive == 0) settings.resolution = "1920x1080";
-        else if (resolutionActive == 1) settings.resolution = "1600x900";
-        else if (resolutionActive == 2) settings.resolution = "1280x720";
-        else if (resolutionActive == 3) settings.resolution = "1024x768";
+        if (resolutionActive == 0)
+          settings.resolution = "1920x1080";
+        else if (resolutionActive == 1)
+          settings.resolution = "1600x900";
+        else if (resolutionActive == 2)
+          settings.resolution = "1280x720";
+        else if (resolutionActive == 3)
+          settings.resolution = "1024x768";
 
         resolution = settingsGetScreenWidth(settings);
         screenWidth = resolution.x;
@@ -527,17 +539,24 @@ int main()
       if (settingsBackButtonAction)
       {
         settings.shootingSound = shootSoundInput;
-        if (resolutionActive == 0) settings.resolution = "1920x1080";
-        else if (resolutionActive == 1) settings.resolution = "1600x900";
-        else if (resolutionActive == 2) settings.resolution = "1280x720";
-        else if (resolutionActive == 3) settings.resolution = "1024x768";
-        
+        if (resolutionActive == 0)
+          settings.resolution = "1920x1080";
+        else if (resolutionActive == 1)
+          settings.resolution = "1600x900";
+        else if (resolutionActive == 2)
+          settings.resolution = "1280x720";
+        else if (resolutionActive == 3)
+          settings.resolution = "1024x768";
+
         settings.background = backgroundInput;
         settings.switchSides = (std::string(switchSidesInput) == "YES");
 
-        if (screenActive == 0) settings.screen = Windowed;
-        else if (screenActive == 1) settings.screen = BorderlessWindow;
-        else if (screenActive == 2) settings.screen = Fullscreen;
+        if (screenActive == 0)
+          settings.screen = Windowed;
+        else if (screenActive == 1)
+          settings.screen = BorderlessWindow;
+        else if (screenActive == 2)
+          settings.screen = Fullscreen;
 
         changeSettings(settings);
 
