@@ -114,37 +114,26 @@ void initSettings()
 {
     std::ofstream writeIn{"../resources/settings.txt"};
 
-    writeIn << "shootingSound=" << "resources/shoot.mp3" << '\n';
+    writeIn << "shootingSound=" << "../resources/shoot.mp3" << '\n';
     writeIn << "switchSides=" << "NO" << '\n';
     writeIn << "screen=" << "Windowed" << '\n';
     writeIn << "resolution=" << "1920x1080" << '\n';
-    writeIn << "background=" << "resources/default.png" << '\n';
+    writeIn << "background=" << "../resources/default.png" << '\n';
 }
 
 std::vector<std::string> getAvailableSounds()
 {
     std::vector<std::string> availableSounds;
-    try
+    for (const auto &entry : std::filesystem::directory_iterator("../resources/"))
     {
-        for (const auto &entry : std::filesystem::directory_iterator("../resources/"))
+        if (entry.is_regular_file())
         {
-            if (entry.is_regular_file())
+            std::string ext = entry.path().extension().string();
+            if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
             {
-                std::string ext = entry.path().extension().string();
-                if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
-                {
-                    availableSounds.push_back(entry.path().filename().string());
-                }
+                availableSounds.push_back(entry.path().filename().string());
             }
         }
-    }
-    catch (...)
-    {
-    }
-
-    if (availableSounds.empty())
-    {
-        availableSounds.push_back("shoot.mp3");
     }
 
     return availableSounds;

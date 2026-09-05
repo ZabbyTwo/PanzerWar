@@ -41,8 +41,11 @@ int main()
     SetConfigFlags(FLAG_WINDOW_UNDECORATED);
   }
 
+  InitAudioDevice();
   InitWindow(screenWidth, screenHeight, "Panzer War");
   SetTargetFPS(60);
+
+  Sound currentShootSound = LoadSound(settings.shootingSound.c_str());
 
   // panzer 1
   Vector2 panzerSize1{200.0f, 100.0f};
@@ -166,13 +169,12 @@ int main()
   int soundActive = 0;
   for (size_t i = 0; i < availableSounds.size(); i++)
   {
-    if ("resources/" + availableSounds[i] == settings.shootingSound)
+    if ("../resources/" + availableSounds[i] == settings.shootingSound)
     {
       soundActive = i;
       break;
     }
   }
-
   while (!WindowShouldClose())
   {
     mousePoint = GetMousePosition();
@@ -301,6 +303,9 @@ int main()
         {
           panzer1.addPanzerBullets({panzer1.getPanzerPosition().x + panzer1.getPanzerSize().x,
                                     panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2});
+
+          StopSound(currentShootSound);
+          PlaySound(currentShootSound);
         }
         for (Vector2 &fired : panzer1.getPanzerBullets())
         {
@@ -335,6 +340,9 @@ int main()
         {
           panzer2.addPanzerBullets({panzer2.getPanzerPosition().x,
                                     panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2});
+
+          StopSound(currentShootSound);
+          PlaySound(currentShootSound);
         }
         for (Vector2 &fired : panzer2.getPanzerBullets())
         {
@@ -551,7 +559,7 @@ int main()
 
       if (settingsBackButtonAction)
       {
-        settings.shootingSound = "resources/" + availableSounds[soundActive];
+        settings.shootingSound = "../resources/" + availableSounds[soundActive];
         if (resolutionActive == 0)
           settings.resolution = "1920x1080";
         else if (resolutionActive == 1)
@@ -572,6 +580,9 @@ int main()
           settings.screen = Fullscreen;
 
         changeSettings(settings);
+
+        UnloadSound(currentShootSound);
+        currentShootSound = LoadSound(settings.shootingSound.c_str());
 
         settingsButtonAction = false;
         settingsBackButtonAction = false;
@@ -599,6 +610,9 @@ int main()
 
     EndDrawing();
   }
+
+  UnloadSound(currentShootSound);
+  CloseAudioDevice();
 
   return 0;
 }

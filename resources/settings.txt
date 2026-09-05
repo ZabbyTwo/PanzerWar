@@ -1,4 +1,4 @@
-shootingSound=resources/shoot.mp3
+shootingSound=../resources/blaster.mp3
 switchSides=NO
 screen=Windowed
 resolution=1920x1080
