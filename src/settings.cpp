@@ -131,7 +131,10 @@ std::vector<std::string> getAvailableSounds()
             std::string ext = entry.path().extension().string();
             if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
             {
-                availableSounds.push_back(entry.path().filename().string());
+                std::string name = entry.path().filename().string();
+                if (name == "click.wav" || name == "hover.wav")
+                    continue;
+                availableSounds.push_back(name);
             }
         }
     }

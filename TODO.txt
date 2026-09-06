@@ -39,16 +39,13 @@
     +panzers
     +rounds
 
--bugfix: when i press on settings btn i accidentally click on the screen mode as well
++bugfix: when i press on settings btn i accidentally click on the screen mode as well
 
--make btns cooler
-    -when hover do sth
++sound effects
+    +button clicks/hovers
+    +make sound when i change value of game mode, settings etc. the same as click 
 
--sound effects
-    -button clicks/hovers -> tank hangar sounds
-    -changes, eg in settings
-
--make ui better etc.
+-make ui better all look the same, one design etc. not so weird/random
 
 -cleanup code
     -buttons in classes and button logics
@@ -56,4 +53,4 @@
 
 -fix scaling when resolution changes
 
--add makefile
+-add cmake

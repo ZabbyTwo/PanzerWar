@@ -44,6 +44,9 @@ int main()
   SetTargetFPS(60);
 
   Sound currentShootSound = LoadSound(settings.shootingSound.c_str());
+  Sound hoverSound = LoadSound("../resources/hover.wav");
+  Sound clickSound = LoadSound("../resources/click.wav");
+  int lastGuiHover = -1;
 
   // load sprite and crop empty space
   auto LoadSprite = [](const char *path, Rectangle crop) -> Texture2D
@@ -296,9 +299,17 @@ int main()
     // Main Menu check
     if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction && !gameModeMenuAction && !matchOver)
     {
+      lastGuiHover = -1;
+
       // start button
       if (CheckCollisionPointRec(mousePoint, startButton))
       {
+        if (startButtonState == 0)
+        {
+          StopSound(hoverSound);
+          PlaySound(hoverSound);
+        }
+
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
           startButtonState = 2;
         else
@@ -306,6 +317,9 @@ int main()
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
+          StopSound(clickSound);
+          PlaySound(clickSound);
+
           startButtonAction = true;
           countdownStart = true;
           countdownStartTime = 3;
@@ -367,6 +381,12 @@ int main()
       // game mode menu button
       if (CheckCollisionPointRec(mousePoint, gameModeButton))
       {
+        if (gameModeMenuState == 0)
+        {
+          StopSound(hoverSound);
+          PlaySound(hoverSound);
+        }
+
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
           gameModeMenuState = 2;
         else
@@ -374,6 +394,8 @@ int main()
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
+          StopSound(clickSound);
+          PlaySound(clickSound);
           gameModeMenuAction = true;
         }
       }
@@ -385,6 +407,12 @@ int main()
       // tutorial button
       if (CheckCollisionPointRec(mousePoint, tutorialButton))
       {
+        if (tutorialButtonState == 0)
+        {
+          StopSound(hoverSound);
+          PlaySound(hoverSound);
+        }
+
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
           tutorialButtonState = 2;
         else
@@ -392,6 +420,8 @@ int main()
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
+          StopSound(clickSound);
+          PlaySound(clickSound);
           tutorialButtonAction = true;
         }
       }
@@ -403,6 +433,12 @@ int main()
       // settings button
       if (CheckCollisionPointRec(mousePoint, settingsButton))
       {
+        if (settingsButtonState == 0)
+        {
+          StopSound(hoverSound);
+          PlaySound(hoverSound);
+        }
+
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
           settingsButtonState = 2;
         else
@@ -410,6 +446,8 @@ int main()
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
+          StopSound(clickSound);
+          PlaySound(clickSound);
           settingsButtonAction = true;
           settingsMenuReady = false;
         }
@@ -422,6 +460,12 @@ int main()
       // quit button
       if (CheckCollisionPointRec(mousePoint, quitButton))
       {
+        if (quitButtonState == 0)
+        {
+          StopSound(hoverSound);
+          PlaySound(hoverSound);
+        }
+
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
           quitButtonState = 2;
         else
@@ -429,6 +473,8 @@ int main()
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
+          StopSound(clickSound);
+          PlaySound(clickSound);
           break;
         }
       }
@@ -442,6 +488,12 @@ int main()
       // settings back button
       if (CheckCollisionPointRec(mousePoint, settingsBackButton))
       {
+        if (settingsBackButtonState == 0)
+        {
+          StopSound(hoverSound);
+          PlaySound(hoverSound);
+        }
+
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
           settingsBackButtonState = 2;
         else
@@ -449,6 +501,8 @@ int main()
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
+          StopSound(clickSound);
+          PlaySound(clickSound);
           settingsBackButtonAction = true;
         }
       }
@@ -674,21 +728,37 @@ int main()
         DrawRectangleRec(menuBtn, GRAY);
         DrawCenteredTextInRec(menuBtn, "MAIN MENU", BLACK);
 
-        // Full reset back to menu
-        if (CheckCollisionPointRec(mousePoint, menuBtn) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        if (CheckCollisionPointRec(mousePoint, menuBtn))
         {
-          matchOver = false;
-          roundOver = false;
-          startButtonAction = false;
-          countdownStart = false;
-          panzer1.setIsPanzerHit(false);
-          panzer2.setIsPanzerHit(false);
-          panzer1.setPanzerPosition(defaultPanzerPosition1);
-          panzer2.setPanzerPosition(defaultPanzerPosition2);
-          panzer1.resetPanzerBullets();
-          panzer2.resetPanzerBullets();
-          scoreP1 = 0;
-          scoreP2 = 0;
+          if (lastGuiHover != 100)
+          {
+            lastGuiHover = 100;
+            StopSound(hoverSound);
+            PlaySound(hoverSound);
+          }
+
+          if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+          {
+            StopSound(clickSound);
+            PlaySound(clickSound);
+            matchOver = false;
+            roundOver = false;
+            startButtonAction = false;
+            countdownStart = false;
+            panzer1.setIsPanzerHit(false);
+            panzer2.setIsPanzerHit(false);
+            panzer1.setPanzerPosition(defaultPanzerPosition1);
+            panzer2.setPanzerPosition(defaultPanzerPosition2);
+            panzer1.resetPanzerBullets();
+            panzer2.resetPanzerBullets();
+            scoreP1 = 0;
+            scoreP2 = 0;
+            lastGuiHover = -1;
+          }
+        }
+        else if (lastGuiHover == 100)
+        {
+          lastGuiHover = -1;
         }
       }
       else if (countdownStart)
@@ -829,12 +899,31 @@ int main()
 
       float controlX = screenWidth / 2.0f + 20.0f;
       float currentY = startY;
+      bool guiHovered = false;
+
+      auto GuiHover = [&](Rectangle rec, int id)
+      {
+        if (CheckCollisionPointRec(mousePoint, rec))
+        {
+          guiHovered = true;
+          if (lastGuiHover != id)
+          {
+            lastGuiHover = id;
+            StopSound(hoverSound);
+            PlaySound(hoverSound);
+          }
+        }
+      };
 
       DrawRowLabel("Game Mode:", currentY);
       const char *currentModeText = (gameModeActive == 0) ? "Survival" : (gameModeActive == 1) ? "Deathmatch"
                                                                                                : "Custom";
-      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, currentModeText))
+      Rectangle modeBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+      GuiHover(modeBtn, 1);
+      if (GuiButton(modeBtn, currentModeText))
       {
+        StopSound(clickSound);
+        PlaySound(clickSound);
         gameModeActive++;
         if (gameModeActive > 2)
           gameModeActive = 0;
@@ -844,8 +933,12 @@ int main()
       DrawRowLabel("Rounds:", currentY);
       const char *currentRoundsText = (roundsActive == 0) ? "Best of 3" : (roundsActive == 1) ? "Best of 5"
                                                                                               : "Best of 7";
-      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, currentRoundsText))
+      Rectangle roundsBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+      GuiHover(roundsBtn, 2);
+      if (GuiButton(roundsBtn, currentRoundsText))
       {
+        StopSound(clickSound);
+        PlaySound(clickSound);
         roundsActive++;
         if (roundsActive > 2)
           roundsActive = 0;
@@ -858,19 +951,47 @@ int main()
       if (gameModeActive == 2)
       {
         DrawRowLabel("Move Speed:", currentY);
-        GuiSliderBar({controlX, currentY, (float)boxWidth, (float)boxHeight}, NULL, TextFormat("%0.1f", customMoveSpeed), &customMoveSpeed, 5.0f, 30.0f);
+        Rectangle moveSlider = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+        GuiHover(moveSlider, 3);
+        if (CheckCollisionPointRec(mousePoint, moveSlider) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+          StopSound(clickSound);
+          PlaySound(clickSound);
+        }
+        GuiSliderBar(moveSlider, NULL, TextFormat("%0.1f", customMoveSpeed), &customMoveSpeed, 5.0f, 30.0f);
         currentY += boxHeight + gapY;
 
         DrawRowLabel("Shoot Speed:", currentY);
-        GuiSliderBar({controlX, currentY, (float)boxWidth, (float)boxHeight}, NULL, TextFormat("%0.1f", customShootSpeed), &customShootSpeed, 10.0f, 50.0f);
+        Rectangle shootSlider = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+        GuiHover(shootSlider, 4);
+        if (CheckCollisionPointRec(mousePoint, shootSlider) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+          StopSound(clickSound);
+          PlaySound(clickSound);
+        }
+        GuiSliderBar(shootSlider, NULL, TextFormat("%0.1f", customShootSpeed), &customShootSpeed, 10.0f, 50.0f);
         currentY += boxHeight + gapY;
 
         DrawRowLabel("Reload Time:", currentY);
-        GuiSliderBar({controlX, currentY, (float)boxWidth, (float)boxHeight}, NULL, TextFormat("%0.1f s", customReloadSpeed), &customReloadSpeed, 0.0f, 5.0f);
+        Rectangle reloadSlider = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+        GuiHover(reloadSlider, 5);
+        if (CheckCollisionPointRec(mousePoint, reloadSlider) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+          StopSound(clickSound);
+          PlaySound(clickSound);
+        }
+        GuiSliderBar(reloadSlider, NULL, TextFormat("%0.1f s", customReloadSpeed), &customReloadSpeed, 0.0f, 5.0f);
         currentY += boxHeight + gapY;
 
         DrawRowLabel("Ammunition:", currentY);
-        GuiSliderBar({controlX, currentY, (float)boxWidth, (float)boxHeight}, NULL, TextFormat("%i", (int)customAmmoStart), &customAmmoStart, 1.0f, 150.0f);
+        Rectangle ammoSlider = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+        GuiHover(ammoSlider, 6);
+        if (CheckCollisionPointRec(mousePoint, ammoSlider) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+          StopSound(clickSound);
+          PlaySound(clickSound);
+        }
+        GuiSliderBar(ammoSlider, NULL, TextFormat("%i", (int)customAmmoStart), &customAmmoStart, 1.0f, 150.0f);
       }
       else
       {
@@ -896,6 +1017,9 @@ int main()
         DrawStaticRule("Ammunition:", ammoText, currentY);
       }
 
+      if (!guiHovered && settingsBackButtonState == 0)
+        lastGuiHover = -1;
+
       DrawRectangleRec(settingsBackButton, GRAY);
       DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
 
@@ -903,6 +1027,7 @@ int main()
       {
         gameModeMenuAction = false;
         settingsBackButtonAction = false;
+        lastGuiHover = -1;
       }
     }
 
@@ -933,10 +1058,29 @@ int main()
 
       float controlX = screenWidth / 2.0f + 20.0f;
       float currentY = startY;
+      bool guiHovered = false;
+
+      auto GuiHover = [&](Rectangle rec, int id)
+      {
+        if (CheckCollisionPointRec(mousePoint, rec))
+        {
+          guiHovered = true;
+          if (lastGuiHover != id)
+          {
+            lastGuiHover = id;
+            StopSound(hoverSound);
+            PlaySound(hoverSound);
+          }
+        }
+      };
 
       DrawRowLabel("Shooting Sound:", currentY);
-      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, availableSounds[soundActive].c_str()))
+      Rectangle soundBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+      GuiHover(soundBtn, 10);
+      if (GuiButton(soundBtn, availableSounds[soundActive].c_str()))
       {
+        StopSound(clickSound);
+        PlaySound(clickSound);
         soundActive++;
         if (soundActive >= availableSounds.size())
           soundActive = 0;
@@ -944,8 +1088,12 @@ int main()
       currentY += boxHeight + gapY;
 
       DrawRowLabel("Switch Sides:", currentY);
-      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, switchSidesInput))
+      Rectangle sidesBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+      GuiHover(sidesBtn, 11);
+      if (GuiButton(sidesBtn, switchSidesInput))
       {
+        StopSound(clickSound);
+        PlaySound(clickSound);
         if (strcmp(switchSidesInput, "YES") == 0)
           strncpy(switchSidesInput, "NO", 63);
         else
@@ -958,8 +1106,12 @@ int main()
                                                                                              : "Fullscreen";
 
       DrawRowLabel("Screen:", currentY);
-      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, currentScreenText))
+      Rectangle screenBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+      GuiHover(screenBtn, 12);
+      if (GuiButton(screenBtn, currentScreenText))
       {
+        StopSound(clickSound);
+        PlaySound(clickSound);
         screenActive++;
         if (screenActive > 2)
           screenActive = 0;
@@ -989,8 +1141,12 @@ int main()
       }
 
       DrawRowLabel("Background:", currentY);
-      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, availableBackgrounds[backgroundActive].c_str()))
+      Rectangle bgBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+      GuiHover(bgBtn, 13);
+      if (GuiButton(bgBtn, availableBackgrounds[backgroundActive].c_str()))
       {
+        StopSound(clickSound);
+        PlaySound(clickSound);
         backgroundActive++;
         if (backgroundActive >= availableBackgrounds.size())
           backgroundActive = 0;
@@ -1003,12 +1159,19 @@ int main()
                                                                                                           : "1024x768";
 
       DrawRowLabel("Resolution:", currentY);
-      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, currentResolutionText))
+      Rectangle resBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
+      GuiHover(resBtn, 14);
+      if (GuiButton(resBtn, currentResolutionText))
       {
+        StopSound(clickSound);
+        PlaySound(clickSound);
         resolutionActive++;
         if (resolutionActive > 3)
           resolutionActive = 0;
       }
+
+      if (!guiHovered && settingsBackButtonState == 0)
+        lastGuiHover = -1;
 
       if (resolutionActive != previousResolutionActive)
       {
@@ -1080,6 +1243,7 @@ int main()
 
         settingsButtonAction = false;
         settingsBackButtonAction = false;
+        lastGuiHover = -1;
       }
 
       GuiUnlock();
@@ -1114,6 +1278,8 @@ int main()
   }
 
   UnloadSound(currentShootSound);
+  UnloadSound(hoverSound);
+  UnloadSound(clickSound);
   CloseAudioDevice();
 
   UnloadTexture(blueTank);
