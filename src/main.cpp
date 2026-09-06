@@ -827,6 +827,8 @@ int main()
                                  + bottomRows * boxHeight + (bottomRows - 1) * gapY);
       float panelPad = 40.0f * uiScale;
       float startY = screenHeight / 2.0f - totalHeight / 2.0f;
+      float panelW = 1200.0f * uiScale;
+      float panelX = screenWidth / 2.0f - panelW / 2.0f;
 
       auto DrawRowLabel = [&](const char *text, float y)
       {
@@ -839,9 +841,7 @@ int main()
       float currentY = startY;
       bool guiHovered = false;
 
-      Ui::drawPanel({screenWidth / 2.0f - 520.0f * uiScale, startY - panelPad,
-                     1040.0f * uiScale, totalHeight + panelPad * 2.0f},
-                    uiScale);
+      Ui::drawPanel({panelX, startY - panelPad, panelW, totalHeight + panelPad * 2.0f}, uiScale);
 
       auto GuiHover = [&](Rectangle rec, int id)
       {
