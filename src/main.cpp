@@ -43,31 +43,53 @@ int main()
 
   InitAudioDevice();
   InitWindow(screenWidth, screenHeight, "Panzer War");
+  SetExitKey(KEY_NULL);
   SetTargetFPS(60);
 
   Sound currentShootSound = LoadSound(settings.shootingSound.c_str());
 
-  auto GetColorFromString = [](std::string colorStr) -> Color {
-    if (colorStr == "WHITE") return WHITE;
-    if (colorStr == "GRAY") return GRAY;
-    if (colorStr == "LIGHTGRAY") return LIGHTGRAY;
-    if (colorStr == "YELLOW") return YELLOW;
-    if (colorStr == "GOLD") return GOLD;
-    if (colorStr == "ORANGE") return ORANGE;
-    if (colorStr == "PINK") return PINK;
-    if (colorStr == "MAROON") return MAROON;
-    if (colorStr == "GREEN") return GREEN;
-    if (colorStr == "LIME") return LIME;
-    if (colorStr == "DARKGREEN") return DARKGREEN;
-    if (colorStr == "SKYBLUE") return SKYBLUE;
-    if (colorStr == "DARKBLUE") return DARKBLUE;
-    if (colorStr == "PURPLE") return PURPLE;
-    if (colorStr == "VIOLET") return VIOLET;
-    if (colorStr == "DARKPURPLE") return DARKPURPLE;
-    if (colorStr == "BEIGE") return BEIGE;
-    if (colorStr == "BROWN") return BROWN;
-    if (colorStr == "DARKBROWN") return DARKBROWN;
-    if (colorStr == "MAGENTA") return MAGENTA;
+  auto GetColorFromString = [](std::string colorStr) -> Color
+  {
+    if (colorStr == "WHITE")
+      return WHITE;
+    if (colorStr == "GRAY")
+      return GRAY;
+    if (colorStr == "LIGHTGRAY")
+      return LIGHTGRAY;
+    if (colorStr == "YELLOW")
+      return YELLOW;
+    if (colorStr == "GOLD")
+      return GOLD;
+    if (colorStr == "ORANGE")
+      return ORANGE;
+    if (colorStr == "PINK")
+      return PINK;
+    if (colorStr == "MAROON")
+      return MAROON;
+    if (colorStr == "GREEN")
+      return GREEN;
+    if (colorStr == "LIME")
+      return LIME;
+    if (colorStr == "DARKGREEN")
+      return DARKGREEN;
+    if (colorStr == "SKYBLUE")
+      return SKYBLUE;
+    if (colorStr == "DARKBLUE")
+      return DARKBLUE;
+    if (colorStr == "PURPLE")
+      return PURPLE;
+    if (colorStr == "VIOLET")
+      return VIOLET;
+    if (colorStr == "DARKPURPLE")
+      return DARKPURPLE;
+    if (colorStr == "BEIGE")
+      return BEIGE;
+    if (colorStr == "BROWN")
+      return BROWN;
+    if (colorStr == "DARKBROWN")
+      return DARKBROWN;
+    if (colorStr == "MAGENTA")
+      return MAGENTA;
     return BLACK;
   };
 
@@ -75,7 +97,8 @@ int main()
   bool useBgTexture = false;
   Color bgColor = BLACK;
 
-  auto LoadNewBackground = [&](std::string bgStr) {
+  auto LoadNewBackground = [&](std::string bgStr)
+  {
     if (useBgTexture)
     {
       UnloadTexture(bgTexture);
@@ -104,11 +127,22 @@ int main()
   Vector2 panzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f};
   panzer panzer2(panzerPosition2, panzerSize2);
 
-  // start button
+  const int buttonGap{40};
   const int startButtonWidth{600};
   const int startButtonHeight{200};
+  const int settingsButtonWidth{450};
+  const int settingsButtonHeight{150};
+  const int tutorialButtonWidth{450};
+  const int tutorialButtonHeight{150};
+  const int quitButtonWidth{450};
+  const int quitButtonHeight{150};
+
+  const float totalMenuHeight = startButtonHeight + settingsButtonHeight + tutorialButtonHeight + quitButtonHeight + (buttonGap * 3);
+  const float menuStartY = screenHeight / 2.0f - totalMenuHeight / 2.0f;
+
+  // start button
   Rectangle startButton{screenWidth / 2.0f - startButtonWidth / 2.0f,
-                        screenHeight / 2.0f - startButtonHeight / 2.0f,
+                        menuStartY,
                         (float)startButtonWidth,
                         (float)startButtonHeight};
   bool startButtonAction{false};
@@ -120,10 +154,8 @@ int main()
   float startButtonTextY{startButton.y + (startButton.height - startButtonTextFontSize) / 2};
 
   // settings button
-  const int settingsButtonWidth{450};
-  const int settingsButtonHeight{150};
   Rectangle settingsButton{screenWidth / 2.0f - settingsButtonWidth / 2.0f,
-                           screenHeight / 2.0f + startButtonHeight,
+                           startButton.y + startButton.height + buttonGap,
                            (float)settingsButtonWidth,
                            (float)settingsButtonHeight};
   bool settingsButtonAction{false};
@@ -153,10 +185,8 @@ int main()
   float settingsBackButtonTextY{settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2};
 
   // tutorial button
-  const int tutorialButtonWidth{450};
-  const int tutorialButtonHeight{150};
   Rectangle tutorialButton{screenWidth / 2.0f - tutorialButtonWidth / 2.0f,
-                           settingsButton.y + settingsButton.height + 20,
+                           settingsButton.y + settingsButton.height + buttonGap,
                            (float)tutorialButtonWidth,
                            (float)tutorialButtonHeight};
   bool tutorialButtonAction{false};
@@ -166,6 +196,18 @@ int main()
   int tutorialButtonTextWidth{MeasureText(tutorialButtonText, tutorialButtonTextFontSize)};
   float tutorialButtonTextX{tutorialButton.x + (tutorialButton.width - tutorialButtonTextWidth) / 2};
   float tutorialButtonTextY{tutorialButton.y + (tutorialButton.height - tutorialButtonTextFontSize) / 2};
+
+  // quit button
+  Rectangle quitButton{screenWidth / 2.0f - quitButtonWidth / 2.0f,
+                       tutorialButton.y + tutorialButton.height + buttonGap,
+                       (float)quitButtonWidth,
+                       (float)quitButtonHeight};
+  int quitButtonState{0};
+  const char *quitButtonText{"QUIT"};
+  int quitButtonTextFontSize{60};
+  int quitButtonTextWidth{MeasureText(quitButtonText, quitButtonTextFontSize)};
+  float quitButtonTextX{quitButton.x + (quitButton.width - quitButtonTextWidth) / 2};
+  float quitButtonTextY{quitButton.y + (quitButton.height - quitButtonTextFontSize) / 2};
 
   char shootSoundInput[64] = {0};
   strncpy(shootSoundInput, settings.shootingSound.c_str(), 63);
@@ -301,6 +343,24 @@ int main()
       else
       {
         settingsButtonState = 0;
+      }
+
+      // quit button
+      if (CheckCollisionPointRec(mousePoint, quitButton))
+      {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+          quitButtonState = 2;
+        else
+          quitButtonState = 1;
+
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+          break;
+        }
+      }
+      else
+      {
+        quitButtonState = 0;
       }
     }
     // Settings Menu check
@@ -442,15 +502,15 @@ int main()
     }
 
     BeginDrawing();
-    
+
     if (startButtonAction)
     {
       if (useBgTexture)
       {
         ClearBackground(BLACK);
-        Rectangle sourceRec = { 0.0f, 0.0f, (float)bgTexture.width, (float)bgTexture.height };
-        Rectangle destRec = { 0.0f, 0.0f, (float)screenWidth, (float)screenHeight };
-        DrawTexturePro(bgTexture, sourceRec, destRec, { 0.0f, 0.0f }, 0.0f, WHITE);
+        Rectangle sourceRec = {0.0f, 0.0f, (float)bgTexture.width, (float)bgTexture.height};
+        Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
+        DrawTexturePro(bgTexture, sourceRec, destRec, {0.0f, 0.0f}, 0.0f, WHITE);
       }
       else
       {
@@ -472,6 +532,9 @@ int main()
 
       DrawRectangleRec(tutorialButton, SKYBLUE);
       DrawText(tutorialButtonText, tutorialButtonTextX, tutorialButtonTextY, tutorialButtonTextFontSize, BLACK);
+
+      DrawRectangleRec(quitButton, RED);
+      DrawText(quitButtonText, quitButtonTextX, quitButtonTextY, quitButtonTextFontSize, BLACK);
     }
 
     if (startButtonAction)
@@ -492,9 +555,6 @@ int main()
             DrawCircleV(bullet, 20, YELLOW);
           }
         }
-        // DrawText(TextFormat("panzer1 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
-        // DrawText(TextFormat("panzer1 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
-        // DrawText(TextFormat("panzer1 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
 
         // for panzer2
         if (!panzer2.getIsPanzerHit())
@@ -505,9 +565,6 @@ int main()
             DrawCircleV(bullet, 20, YELLOW);
           }
         }
-        // DrawText(TextFormat("panzer2 Shots Fired: %i", (int)panzerBullets1.size()), 5, 5, 20, WHITE);
-        // DrawText(TextFormat("panzer2 X Position: %i", (int)panzerPosition1.x), 5, 25, 20, WHITE);
-        // DrawText(TextFormat("panzer2 Y Position: %i", (int)panzerPosition1.y), 5, 45, 20, WHITE);
       }
     }
 
@@ -623,20 +680,29 @@ int main()
 
         SetWindowSize(screenWidth, screenHeight);
 
+        const int gap = 40;
+        const float newTotalHeight = startButtonHeight + settingsButtonHeight + tutorialButtonHeight + quitButtonHeight + (gap * 3);
+        const float newStartY = screenHeight / 2.0f - newTotalHeight / 2.0f;
+
         startButton.x = screenWidth / 2.0f - startButtonWidth / 2.0f;
-        startButton.y = screenHeight / 2.0f - startButtonHeight / 2.0f;
+        startButton.y = newStartY;
         startButtonTextX = startButton.x + (startButton.width - startButtonTextWidth) / 2;
         startButtonTextY = startButton.y + (startButton.height - startButtonTextFontSize) / 2;
 
         settingsButton.x = screenWidth / 2.0f - settingsButtonWidth / 2.0f;
-        settingsButton.y = screenHeight / 2.0f + startButtonHeight;
+        settingsButton.y = startButton.y + startButton.height + gap;
         settingsButtonTextX = settingsButton.x + (settingsButton.width - settingsButtonTextWidth) / 2;
         settingsButtonTextY = settingsButton.y + (settingsButton.height - settingsButtonTextFontSize) / 2;
 
         tutorialButton.x = screenWidth / 2.0f - tutorialButtonWidth / 2.0f;
-        tutorialButton.y = settingsButton.y + settingsButton.height + 20;
+        tutorialButton.y = settingsButton.y + settingsButton.height + gap;
         tutorialButtonTextX = tutorialButton.x + (tutorialButton.width - tutorialButtonTextWidth) / 2;
         tutorialButtonTextY = tutorialButton.y + (tutorialButton.height - tutorialButtonTextFontSize) / 2;
+
+        quitButton.x = screenWidth / 2.0f - quitButtonWidth / 2.0f;
+        quitButton.y = tutorialButton.y + tutorialButton.height + gap;
+        quitButtonTextX = quitButton.x + (quitButton.width - quitButtonTextWidth) / 2;
+        quitButtonTextY = quitButton.y + (quitButton.height - quitButtonTextFontSize) / 2;
 
         settingsBackButton.x = screenWidth / 2.0f - settingsBackButtonWidth / 2.0f;
         settingsBackButton.y = screenHeight - placeToBorder - settingsBackButtonHeight;
@@ -716,7 +782,8 @@ int main()
   UnloadSound(currentShootSound);
   CloseAudioDevice();
 
-  if (useBgTexture) UnloadTexture(bgTexture);
+  if (useBgTexture)
+    UnloadTexture(bgTexture);
 
   return 0;
 }

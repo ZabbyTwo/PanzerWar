@@ -22,9 +22,8 @@
     +make background.png work
     +make shooting sound work
 
--add quit button on home screen
-
--when "esc" pressed window closes, dont want it
++add quit button on home screen
++when "esc" pressed window closes, dont want it
 
 -game modes best of 3/5/7
     -survial: reload timer for 2 seconds and have ammunition for 50 shots
@@ -45,10 +44,10 @@
     -button clicks/hovers -> tank hangar sounds
     -changes, eg in settings
 
--fix scaling when resolution changes
-
 -cleanup code
     -buttons in classes and button logics
     -optimize it
+
+-fix scaling when resolution changes
 
 -add makefile
