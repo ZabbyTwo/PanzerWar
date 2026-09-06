@@ -51,11 +51,15 @@
 
 +fixed hierarchy 
 
--fix scaling when resolution changes, so everything always stays at the same position etc.
++fix scaling when resolution changes, so everything always stays at the same position etc.
+
++back home btn
 
 -cleanup code
     -buttons in classes and button logics
+        -different files etc. all simple and easy to understand
     -optimize it
-
+    -use .hpp instead of .h
+    -all in one code style easy, simple, primitive and modern 
 
 -add cmake

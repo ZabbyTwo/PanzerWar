@@ -35,6 +35,7 @@ public:
     // setters
     void setIsPanzerHit(bool state);
     void setPanzerPosition(Vector2 coordinates);
+    void setPanzerSize(Vector2 size);
     void setMovementSpeed(float speed);
     void setShootingVelocity(float vel);
 

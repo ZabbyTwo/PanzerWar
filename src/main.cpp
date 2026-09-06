@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <algorithm>
 
 int main()
 {
@@ -25,8 +26,12 @@ int main()
 
   int screenWidth{resolution.x};
   int screenHeight{resolution.y};
-  const int placeToBorder{30};
-  const int hudBarHeight{90};
+  const float BASE_W = 1920.0f;
+  const float BASE_H = 1080.0f;
+  float uiScale = (float)screenHeight / BASE_H;
+
+  float placeToBorder = 30.0f * uiScale;
+  float hudBarHeight = 90.0f * uiScale;
 
   // Window Settings
 
@@ -99,10 +104,10 @@ int main()
   Texture2D fireballLeft = LoadSprite("../resources/sprites/fireball-goingleft.png", {88, 472, 1792, 968});
   Texture2D fireballRight = LoadSprite("../resources/sprites/fireball-goingright.png", {80, 480, 1792, 960});
 
-  const float panzerHeight = 160.0f;
-  const float panzerWidth = panzerHeight * ((float)redTank.width / (float)redTank.height);
-  const float bulletHeight = 70.0f;
-  const float bulletRadius = 30.0f;
+  float panzerHeight = 160.0f * uiScale;
+  float panzerWidth = panzerHeight * ((float)redTank.width / (float)redTank.height);
+  float bulletHeight = 70.0f * uiScale;
+  float bulletRadius = 30.0f * uiScale;
   const float fireTime = 0.2f;
   float p1FireTimer = 0.0f;
   float p2FireTimer = 0.0f;
@@ -207,10 +212,10 @@ int main()
   float customReloadSpeed = 1.0f;
   float customAmmoStart = 50.0f;
 
-  const int buttonWidth{450};
-  const int buttonHeight{120};
-  const int buttonGap{15};
-  int menuTextFontSize{55};
+  float buttonWidth = 450.0f * uiScale;
+  float buttonHeight = 120.0f * uiScale;
+  float buttonGap = 15.0f * uiScale;
+  int menuTextFontSize = (int)(55 * uiScale);
 
   bool startButtonAction{false};
   int startButtonState{0};
@@ -226,23 +231,21 @@ int main()
   int tutorialButtonState{0};
 
   int quitButtonState{0};
+  int hudHomeButtonState{0};
 
-  int settingsFontTextSize{60};
+  int settingsFontTextSize = (int)(60 * uiScale);
 
   // settings back button
-  const int settingsBackButtonWidth{300};
-  const int settingsBackButtonHeight{150};
+  float settingsBackButtonWidth = 300.0f * uiScale;
+  float settingsBackButtonHeight = 150.0f * uiScale;
   Rectangle settingsBackButton{screenWidth / 2.0f - settingsBackButtonWidth / 2.0f,
                                (float)(screenHeight - placeToBorder - settingsBackButtonHeight),
-                               (float)settingsBackButtonWidth,
-                               (float)settingsBackButtonHeight};
+                               settingsBackButtonWidth,
+                               settingsBackButtonHeight};
   bool settingsBackButtonAction{false};
   int settingsBackButtonState{0};
   const char *settingsBackButtonText{"BACK"};
-  int settingsBackButtonTextFontSize{80};
-  int settingsBackButtonTextWidth{MeasureText(settingsBackButtonText, settingsBackButtonTextFontSize)};
-  float settingsBackButtonTextX{settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2};
-  float settingsBackButtonTextY{settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2};
+  int settingsBackButtonTextFontSize = (int)(80 * uiScale);
 
   char shootSoundInput[64] = {0};
   strncpy(shootSoundInput, settings.shootingSound.c_str(), 63);
@@ -258,15 +261,71 @@ int main()
   else if (settings.screen == Fullscreen)
     screenActive = 2;
 
-  int resolutionActive = 0;
-  if (settings.resolution == "1920x1080")
-    resolutionActive = 0;
-  else if (settings.resolution == "1600x900")
-    resolutionActive = 1;
-  else if (settings.resolution == "1280x720")
-    resolutionActive = 2;
-  else if (settings.resolution == "1024x768")
-    resolutionActive = 3;
+  const char *resolutions[] = {
+      "3840x2160",
+      "3440x1440",
+      "2560x1440",
+      "2560x1080",
+      "1920x1200",
+      "1920x1080",
+      "1680x1050",
+      "1600x900",
+      "1440x900",
+      "1366x768",
+      "1360x768",
+      "1280x1024",
+      "1280x800",
+      "1280x720",
+      "1024x768",
+      "800x600"};
+  const int resolutionCount = (int)(sizeof(resolutions) / sizeof(resolutions[0]));
+
+  int resolutionActive = 5; // default 1920x1080
+  for (int i = 0; i < resolutionCount; i++)
+  {
+    if (settings.resolution == resolutions[i])
+    {
+      resolutionActive = i;
+      break;
+    }
+  }
+
+  auto ApplyWindowMode = [&]()
+  {
+    int monitor = GetCurrentMonitor();
+    int monW = GetMonitorWidth(monitor);
+    int monH = GetMonitorHeight(monitor);
+
+    if (IsWindowFullscreen())
+      ToggleFullscreen();
+
+    if (screenActive == 0)
+    {
+      ClearWindowState(FLAG_WINDOW_UNDECORATED);
+      SetWindowSize(resolution.x, resolution.y);
+    }
+    else if (screenActive == 1)
+    {
+      SetWindowState(FLAG_WINDOW_UNDECORATED);
+      SetWindowSize(monW, monH);
+      SetWindowPosition(GetMonitorPosition(monitor).x, GetMonitorPosition(monitor).y);
+    }
+    else if (screenActive == 2)
+    {
+      ClearWindowState(FLAG_WINDOW_UNDECORATED);
+      SetWindowSize(monW, monH);
+      ToggleFullscreen();
+    }
+
+    screenWidth = GetScreenWidth();
+    screenHeight = GetScreenHeight();
+  };
+
+  // match real window size after init (esp. fullscreen / borderless)
+  screenWidth = GetScreenWidth();
+  screenHeight = GetScreenHeight();
+  if (screenActive == 1 || screenActive == 2)
+    ApplyWindowMode();
 
   char backgroundInput[64] = {0};
   strncpy(backgroundInput, settings.background.c_str(), 63);
@@ -312,23 +371,56 @@ int main()
   {
     mousePoint = GetMousePosition();
 
+    // always use the real window / fullscreen size
+    screenWidth = GetScreenWidth();
+    screenHeight = GetScreenHeight();
+
+    // scale everything from 1920x1080 so layout stays the same
+    uiScale = (float)screenHeight / BASE_H;
+    placeToBorder = 30.0f * uiScale;
+    hudBarHeight = 90.0f * uiScale;
+    panzerHeight = 160.0f * uiScale;
+    panzerWidth = panzerHeight * ((float)redTank.width / (float)redTank.height);
+    bulletHeight = 70.0f * uiScale;
+    bulletRadius = 30.0f * uiScale;
+    buttonWidth = 450.0f * uiScale;
+    buttonHeight = 120.0f * uiScale;
+    buttonGap = 15.0f * uiScale;
+    menuTextFontSize = (int)(55 * uiScale);
+    settingsFontTextSize = (int)(60 * uiScale);
+    settingsBackButtonWidth = 300.0f * uiScale;
+    settingsBackButtonHeight = 150.0f * uiScale;
+    settingsBackButtonTextFontSize = (int)(80 * uiScale);
+    settingsBackButton = {screenWidth / 2.0f - settingsBackButtonWidth / 2.0f,
+                          screenHeight - placeToBorder - settingsBackButtonHeight,
+                          settingsBackButtonWidth,
+                          settingsBackButtonHeight};
+
+    panzer1.setPanzerSize({panzerWidth, panzerHeight});
+    panzer2.setPanzerSize({panzerWidth, panzerHeight});
+    defaultPanzerPosition1 = {placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
+    defaultPanzerPosition2 = {screenWidth - panzerWidth - placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
+
+    GuiSetStyle(BUTTON, BORDER_WIDTH, (int)std::max(1.0f, 3.0f * uiScale));
+    GuiSetStyle(SLIDER, BORDER_WIDTH, (int)std::max(1.0f, 3.0f * uiScale));
+
     int numButtons = 5;
     float totalMenuHeight = (buttonHeight * numButtons) + (buttonGap * (numButtons - 1));
     float currentBtnY = screenHeight / 2.0f - totalMenuHeight / 2.0f;
 
-    Rectangle startButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    Rectangle startButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
     currentBtnY += buttonHeight + buttonGap;
 
-    Rectangle gameModeButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    Rectangle gameModeButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
     currentBtnY += buttonHeight + buttonGap;
 
-    Rectangle settingsButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    Rectangle settingsButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
     currentBtnY += buttonHeight + buttonGap;
 
-    Rectangle tutorialButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    Rectangle tutorialButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
     currentBtnY += buttonHeight + buttonGap;
 
-    Rectangle quitButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    Rectangle quitButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
 
     // Main Menu check
     if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction && !gameModeMenuAction && !matchOver)
@@ -382,10 +474,10 @@ int main()
           }
 
           // Full Match Reset
-          panzer1.setMovementSpeed(activeMove);
-          panzer1.setShootingVelocity(activeShoot);
-          panzer2.setMovementSpeed(activeMove);
-          panzer2.setShootingVelocity(activeShoot);
+          panzer1.setMovementSpeed(activeMove * uiScale);
+          panzer1.setShootingVelocity(activeShoot * uiScale);
+          panzer2.setMovementSpeed(activeMove * uiScale);
+          panzer2.setShootingVelocity(activeShoot * uiScale);
 
           panzer1.setIsPanzerHit(false);
           panzer2.setIsPanzerHit(false);
@@ -624,7 +716,7 @@ int main()
           if (IsKeyPressed(KEY_D) && p1ReloadTimer <= 0.0f && p1Ammo != 0)
           {
             panzer1.addPanzerBullets({panzer1.getPanzerPosition().x + panzer1.getPanzerSize().x,
-                                      panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2 - 35});
+                                      panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2 - 35.0f * uiScale});
 
             if (p1Ammo > 0)
               p1Ammo--;
@@ -665,7 +757,7 @@ int main()
           if (IsKeyPressed(KEY_LEFT) && p2ReloadTimer <= 0.0f && p2Ammo != 0)
           {
             panzer2.addPanzerBullets({panzer2.getPanzerPosition().x,
-                                      panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2 - 35});
+                                      panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2 - 35.0f * uiScale});
 
             if (p2Ammo > 0)
               p2Ammo--;
@@ -724,7 +816,7 @@ int main()
       }
 
       DrawRectangleRec(rec, fill);
-      DrawRectangleLinesEx(rec, 3.0f, border);
+      DrawRectangleLinesEx(rec, std::max(1.0f, 3.0f * uiScale), border);
       int tw = MeasureText(text, fontSize);
       DrawText(text, rec.x + (rec.width - tw) / 2.0f, rec.y + (rec.height - fontSize) / 2.0f, fontSize, uiText);
     };
@@ -738,7 +830,7 @@ int main()
     auto DrawUiPanel = [&](Rectangle rec)
     {
       DrawRectangleRec(rec, uiPanel);
-      DrawRectangleLinesEx(rec, 2.0f, uiBorder);
+      DrawRectangleLinesEx(rec, std::max(1.0f, 2.0f * uiScale), uiBorder);
     };
 
     if (startButtonAction)
@@ -762,9 +854,9 @@ int main()
 
     if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction && !gameModeMenuAction && !matchOver)
     {
-      DrawUiTitle("PANZER WAR", 80, 90);
+      DrawUiTitle("PANZER WAR", 80.0f * uiScale, (int)(90 * uiScale));
 
-      float panelPad = 35.0f;
+      float panelPad = 35.0f * uiScale;
       DrawUiPanel({startButton.x - panelPad, startButton.y - panelPad,
                    startButton.width + panelPad * 2.0f, totalMenuHeight + panelPad * 2.0f});
 
@@ -781,9 +873,9 @@ int main()
       {
         DrawRectangle(0, 0, screenWidth, screenHeight, Fade(uiBg, 0.7f));
         DrawUiTitle((scoreP1 > scoreP2) ? "PLAYER 1 WINS THE MATCH!" : "PLAYER 2 WINS THE MATCH!",
-                    screenHeight / 2.0f - 120, 70);
+                    screenHeight / 2.0f - 120.0f * uiScale, (int)(70 * uiScale));
 
-        Rectangle menuBtn = {screenWidth / 2.0f - buttonWidth / 2.0f, (float)(screenHeight / 2 + 50), (float)buttonWidth, (float)buttonHeight};
+        Rectangle menuBtn = {screenWidth / 2.0f - buttonWidth / 2.0f, screenHeight / 2.0f + 50.0f * uiScale, buttonWidth, buttonHeight};
         int matchBtnState = 0;
 
         if (CheckCollisionPointRec(mousePoint, menuBtn))
@@ -827,7 +919,7 @@ int main()
       {
         // HUD bar (not part of playfield)
         DrawRectangle(0, 0, screenWidth, hudBarHeight, uiPanel);
-        DrawRectangle(0, hudBarHeight - 3, screenWidth, 3, uiAccent);
+        DrawRectangle(0, hudBarHeight - 3.0f * uiScale, screenWidth, std::max(2.0f, 3.0f * uiScale), uiAccent);
 
         const char *p1AmmoStr = (p1Ammo < 0) ? "INF" : TextFormat("%d", p1Ammo);
         const char *p2AmmoStr = (p2Ammo < 0) ? "INF" : TextFormat("%d", p2Ammo);
@@ -837,26 +929,72 @@ int main()
         Color p1Color = settings.switchSides ? RED : BLUE;
         Color p2Color = settings.switchSides ? BLUE : RED;
 
-        DrawText(p1Text, 30, 28, 36, p1Color);
+        int hudFont = (int)(36 * uiScale);
+        int reloadFont = (int)(20 * uiScale);
+        DrawText(p1Text, (int)(30 * uiScale), (int)(28 * uiScale), hudFont, p1Color);
         if (p1ReloadTimer > 0)
-          DrawText("RELOADING", 30, 62, 20, uiAccent);
+          DrawText("RELOADING", (int)(30 * uiScale), (int)(62 * uiScale), reloadFont, uiAccent);
 
-        int p2Width = MeasureText(p2Text, 36);
-        DrawText(p2Text, screenWidth - p2Width - 30, 28, 36, p2Color);
+        int p2Width = MeasureText(p2Text, hudFont);
+        DrawText(p2Text, screenWidth - p2Width - (int)(30 * uiScale), (int)(28 * uiScale), hudFont, p2Color);
         if (p2ReloadTimer > 0)
-          DrawText("RELOADING", screenWidth - MeasureText("RELOADING", 20) - 30, 62, 20, uiAccent);
+          DrawText("RELOADING", screenWidth - MeasureText("RELOADING", reloadFont) - (int)(30 * uiScale), (int)(62 * uiScale), reloadFont, uiAccent);
+
+        // home / quit back to menu
+        float homeBtnW = 160.0f * uiScale;
+        float homeBtnH = 50.0f * uiScale;
+        Rectangle hudHomeBtn = {screenWidth / 2.0f - homeBtnW / 2.0f, (hudBarHeight - homeBtnH) / 2.0f, homeBtnW, homeBtnH};
+
+        if (CheckCollisionPointRec(mousePoint, hudHomeBtn))
+        {
+          if (hudHomeButtonState == 0)
+          {
+            StopSound(hoverSound);
+            PlaySound(hoverSound);
+          }
+          hudHomeButtonState = IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? 2 : 1;
+
+          if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+          {
+            StopSound(clickSound);
+            PlaySound(clickSound);
+            matchOver = false;
+            roundOver = false;
+            startButtonAction = false;
+            countdownStart = false;
+            panzer1.setIsPanzerHit(false);
+            panzer2.setIsPanzerHit(false);
+            panzer1.setPanzerPosition(defaultPanzerPosition1);
+            panzer2.setPanzerPosition(defaultPanzerPosition2);
+            panzer1.resetPanzerBullets();
+            panzer2.resetPanzerBullets();
+            scoreP1 = 0;
+            scoreP2 = 0;
+            p1FireTimer = 0.0f;
+            p2FireTimer = 0.0f;
+            hudHomeButtonState = 0;
+          }
+        }
+        else
+        {
+          hudHomeButtonState = 0;
+        }
+
+        DrawUiButton(hudHomeBtn, "HOME", hudHomeButtonState, (int)(28 * uiScale));
 
         if (countdownStart)
         {
           const char *text = TextFormat("%d", countdownStartTime);
-          DrawText(text, screenWidth / 2 - MeasureText(text, 120) / 2, screenHeight / 2 - 60, 120, uiAccent);
+          int cdFont = (int)(120 * uiScale);
+          DrawText(text, screenWidth / 2 - MeasureText(text, cdFont) / 2, screenHeight / 2 - (int)(60 * uiScale), cdFont, uiAccent);
         }
         else
         {
         if (roundOver)
         {
           const char *rwText = panzer2.getIsPanzerHit() ? "PLAYER 1 WINS ROUND!" : "PLAYER 2 WINS ROUND!";
-          DrawText(rwText, screenWidth / 2 - MeasureText(rwText, 60) / 2, screenHeight / 2 - 30, 60, uiAccent);
+          int rwFont = (int)(60 * uiScale);
+          DrawText(rwText, screenWidth / 2 - MeasureText(rwText, rwFont) / 2, screenHeight / 2 - (int)(30 * uiScale), rwFont, uiAccent);
         }
 
         // for panzer1
@@ -950,12 +1088,12 @@ int main()
     // game mode menu
     if (gameModeMenuAction)
     {
-      DrawUiTitle("GAME MODES", 60, 70);
-      GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
+      DrawUiTitle("GAME MODES", 60.0f * uiScale, (int)(70 * uiScale));
+      GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - (int)(10 * uiScale));
 
-      int boxWidth = 450;
-      int boxHeight = settingsFontTextSize + 15;
-      int gapY = 20;
+      int boxWidth = (int)(450 * uiScale);
+      int boxHeight = settingsFontTextSize + (int)(15 * uiScale);
+      int gapY = (int)(20 * uiScale);
 
       int numRows = 6;
       float totalHeight = (boxHeight * numRows) + (gapY * (numRows - 1));
@@ -964,14 +1102,14 @@ int main()
       auto DrawRowLabel = [&](const char *text, float y)
       {
         int textW = MeasureText(text, settingsFontTextSize);
-        DrawText(text, screenWidth / 2 - 20 - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, uiText);
+        DrawText(text, screenWidth / 2 - (int)(20 * uiScale) - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, uiText);
       };
 
-      float controlX = screenWidth / 2.0f + 20.0f;
+      float controlX = screenWidth / 2.0f + 20.0f * uiScale;
       float currentY = startY;
       bool guiHovered = false;
 
-      DrawUiPanel({screenWidth / 2.0f - 520.0f, startY - 30.0f, 1040.0f, totalHeight + 60.0f});
+      DrawUiPanel({screenWidth / 2.0f - 520.0f * uiScale, startY - 30.0f * uiScale, 1040.0f * uiScale, totalHeight + 60.0f * uiScale});
 
       auto GuiHover = [&](Rectangle rec, int id)
       {
@@ -1018,7 +1156,7 @@ int main()
       currentY += boxHeight + gapY;
 
       currentY += gapY;
-      GuiSetStyle(DEFAULT, TEXT_SIZE, 40);
+      GuiSetStyle(DEFAULT, TEXT_SIZE, (int)(40 * uiScale));
 
       if (gameModeActive == 2)
       {
@@ -1076,8 +1214,9 @@ int main()
         {
           DrawRowLabel(label, y);
           DrawRectangle(controlX, y, boxWidth, boxHeight, uiBtn);
-          DrawRectangleLinesEx({controlX, y, (float)boxWidth, (float)boxHeight}, 3.0f, uiBorder);
-          DrawText(value, controlX + boxWidth / 2 - MeasureText(value, 40) / 2, y + (boxHeight / 2) - 20, 40, uiMuted);
+          DrawRectangleLinesEx({controlX, y, (float)boxWidth, (float)boxHeight}, std::max(1.0f, 3.0f * uiScale), uiBorder);
+          int valueFont = (int)(40 * uiScale);
+          DrawText(value, controlX + boxWidth / 2 - MeasureText(value, valueFont) / 2, y + (boxHeight / 2) - valueFont / 2, valueFont, uiMuted);
         };
 
         DrawStaticRule("Move Speed:", moveText, currentY);
@@ -1111,12 +1250,12 @@ int main()
         settingsMenuReady = true;
       }
 
-      DrawUiTitle("SETTINGS", 60, 70);
-      GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
+      DrawUiTitle("SETTINGS", 60.0f * uiScale, (int)(70 * uiScale));
+      GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - (int)(10 * uiScale));
 
-      int boxWidth = 450;
-      int boxHeight = settingsFontTextSize + 15;
-      int gapY = 20;
+      int boxWidth = (int)(450 * uiScale);
+      int boxHeight = settingsFontTextSize + (int)(15 * uiScale);
+      int gapY = (int)(20 * uiScale);
 
       int numRows = 5;
       float totalHeight = (boxHeight * numRows) + (gapY * (numRows - 1));
@@ -1125,14 +1264,14 @@ int main()
       auto DrawRowLabel = [&](const char *text, float y)
       {
         int textW = MeasureText(text, settingsFontTextSize);
-        DrawText(text, screenWidth / 2 - 20 - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, uiText);
+        DrawText(text, screenWidth / 2 - (int)(20 * uiScale) - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, uiText);
       };
 
-      float controlX = screenWidth / 2.0f + 20.0f;
+      float controlX = screenWidth / 2.0f + 20.0f * uiScale;
       float currentY = startY;
       bool guiHovered = false;
 
-      DrawUiPanel({screenWidth / 2.0f - 520.0f, startY - 30.0f, 1040.0f, totalHeight + 60.0f});
+      DrawUiPanel({screenWidth / 2.0f - 520.0f * uiScale, startY - 30.0f * uiScale, 1040.0f * uiScale, totalHeight + 60.0f * uiScale});
 
       auto GuiHover = [&](Rectangle rec, int id)
       {
@@ -1193,26 +1332,7 @@ int main()
       currentY += boxHeight + gapY;
 
       if (screenActive != previousScreenActive)
-      {
-        if (IsWindowFullscreen())
-          ToggleFullscreen();
-
-        if (screenActive == 0)
-        {
-          ClearWindowState(FLAG_WINDOW_UNDECORATED);
-          SetWindowSize(screenWidth, screenHeight);
-        }
-        else if (screenActive == 1)
-        {
-          SetWindowState(FLAG_WINDOW_UNDECORATED);
-          SetWindowSize(screenWidth, screenHeight);
-        }
-        else if (screenActive == 2)
-        {
-          ClearWindowState(FLAG_WINDOW_UNDECORATED);
-          ToggleFullscreen();
-        }
-      }
+        ApplyWindowMode();
 
       DrawRowLabel("Background:", currentY);
       Rectangle bgBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
@@ -1228,19 +1348,16 @@ int main()
       currentY += boxHeight + gapY;
 
       int previousResolutionActive = resolutionActive;
-      const char *currentResolutionText = (resolutionActive == 0) ? "1920x1080" : (resolutionActive == 1) ? "1600x900"
-                                                                              : (resolutionActive == 2)   ? "1280x720"
-                                                                                                          : "1024x768";
 
       DrawRowLabel("Resolution:", currentY);
       Rectangle resBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
       GuiHover(resBtn, 14);
-      if (GuiButton(resBtn, currentResolutionText))
+      if (GuiButton(resBtn, resolutions[resolutionActive]))
       {
         StopSound(clickSound);
         PlaySound(clickSound);
         resolutionActive++;
-        if (resolutionActive > 3)
+        if (resolutionActive >= resolutionCount)
           resolutionActive = 0;
       }
 
@@ -1249,28 +1366,16 @@ int main()
 
       if (resolutionActive != previousResolutionActive)
       {
-        if (resolutionActive == 0)
-          settings.resolution = "1920x1080";
-        else if (resolutionActive == 1)
-          settings.resolution = "1600x900";
-        else if (resolutionActive == 2)
-          settings.resolution = "1280x720";
-        else if (resolutionActive == 3)
-          settings.resolution = "1024x768";
-
+        settings.resolution = resolutions[resolutionActive];
         resolution = settingsGetScreenWidth(settings);
-        screenWidth = resolution.x;
-        screenHeight = resolution.y;
 
-        SetWindowSize(screenWidth, screenHeight);
-
-        settingsBackButton.x = screenWidth / 2.0f - settingsBackButtonWidth / 2.0f;
-        settingsBackButton.y = screenHeight - placeToBorder - settingsBackButtonHeight;
-        settingsBackButtonTextX = settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2;
-        settingsBackButtonTextY = settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2;
-
-        defaultPanzerPosition1 = {(float)placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
-        defaultPanzerPosition2 = {screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
+        // resolution only applies in windowed mode
+        if (screenActive == 0)
+        {
+          SetWindowSize(resolution.x, resolution.y);
+          screenWidth = GetScreenWidth();
+          screenHeight = GetScreenHeight();
+        }
       }
 
       // back button
@@ -1279,14 +1384,7 @@ int main()
       if (settingsBackButtonAction)
       {
         settings.shootingSound = "../resources/" + availableSounds[soundActive];
-        if (resolutionActive == 0)
-          settings.resolution = "1920x1080";
-        else if (resolutionActive == 1)
-          settings.resolution = "1600x900";
-        else if (resolutionActive == 2)
-          settings.resolution = "1280x720";
-        else if (resolutionActive == 3)
-          settings.resolution = "1024x768";
+        settings.resolution = resolutions[resolutionActive];
 
         std::string bgToSave = availableBackgrounds[backgroundActive];
         if (bgToSave.find('.') != std::string::npos)
@@ -1325,20 +1423,22 @@ int main()
     // tutorial menu
     if (tutorialButtonAction)
     {
-      DrawUiTitle("HOW TO PLAY", 60, 70);
+      DrawUiTitle("HOW TO PLAY", 60.0f * uiScale, (int)(70 * uiScale));
 
-      DrawUiPanel({80.0f, 180.0f, screenWidth / 2.0f - 120.0f, 340.0f});
-      DrawUiPanel({screenWidth / 2.0f + 40.0f, 180.0f, screenWidth / 2.0f - 120.0f, 340.0f});
+      DrawUiPanel({80.0f * uiScale, 180.0f * uiScale, screenWidth / 2.0f - 120.0f * uiScale, 340.0f * uiScale});
+      DrawUiPanel({screenWidth / 2.0f + 40.0f * uiScale, 180.0f * uiScale, screenWidth / 2.0f - 120.0f * uiScale, 340.0f * uiScale});
 
-      DrawText("PLAYER 1", 120, 210, 50, BLUE);
-      DrawText("W - Move Up", 120, 290, 36, uiText);
-      DrawText("S - Move Down", 120, 350, 36, uiText);
-      DrawText("D - Shoot", 120, 410, 36, uiText);
+      int titleFont = (int)(50 * uiScale);
+      int bodyFont = (int)(36 * uiScale);
+      DrawText("PLAYER 1", (int)(120 * uiScale), (int)(210 * uiScale), titleFont, BLUE);
+      DrawText("W - Move Up", (int)(120 * uiScale), (int)(290 * uiScale), bodyFont, uiText);
+      DrawText("S - Move Down", (int)(120 * uiScale), (int)(350 * uiScale), bodyFont, uiText);
+      DrawText("D - Shoot", (int)(120 * uiScale), (int)(410 * uiScale), bodyFont, uiText);
 
-      DrawText("PLAYER 2", screenWidth / 2.0f + 80, 210, 50, RED);
-      DrawText("UP Arrow - Move Up", screenWidth / 2.0f + 80, 290, 36, uiText);
-      DrawText("DOWN Arrow - Move Down", screenWidth / 2.0f + 80, 350, 36, uiText);
-      DrawText("LEFT Arrow - Shoot", screenWidth / 2.0f + 80, 410, 36, uiText);
+      DrawText("PLAYER 2", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(210 * uiScale), titleFont, RED);
+      DrawText("UP Arrow - Move Up", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(290 * uiScale), bodyFont, uiText);
+      DrawText("DOWN Arrow - Move Down", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(350 * uiScale), bodyFont, uiText);
+      DrawText("LEFT Arrow - Shoot", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(410 * uiScale), bodyFont, uiText);
 
       DrawUiButton(settingsBackButton, settingsBackButtonText, settingsBackButtonState, settingsBackButtonTextFontSize);
 

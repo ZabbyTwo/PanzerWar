@@ -57,6 +57,11 @@ void panzer::setPanzerPosition(Vector2 coordinates)
     this->PanzerPosition = coordinates;
 }
 
+void panzer::setPanzerSize(Vector2 size)
+{
+    this->PanzerSize = size;
+}
+
 void panzer::setMovementSpeed(float speed)
 {
     this->MovementSpeed = speed;
