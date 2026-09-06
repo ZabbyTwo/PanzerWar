@@ -1,99 +1,83 @@
-#include "raylib.h"
-#include "panzer.h"
+#include "panzer.hpp"
 
 #include <iostream>
-#include <vector>
 
-panzer::panzer(Vector2 panzerPosition, Vector2 panzerSize)
+Panzer::Panzer(Vector2 position, Vector2 size)
+    : position(position), size(size)
 {
-    this->PanzerPosition = panzerPosition;
-    this->PanzerSize = panzerSize;
 }
 
-panzer::~panzer()
+float Panzer::getMovementSpeed() const
 {
-    // TODO
+    return movementSpeed;
 }
 
-// getters
-float panzer::getMovementSpeed()
+float Panzer::getShootingVelocity() const
 {
-    return this->MovementSpeed;
+    return shootingVelocity;
 }
 
-float panzer::getShootingVelocity()
+bool Panzer::getIsHit() const
 {
-    return this->ShootingVelocity;
+    return isHit;
 }
 
-bool panzer::getIsPanzerHit()
+Vector2 Panzer::getPosition() const
 {
-    return this->IsPanzerHit;
+    return position;
 }
 
-Vector2 panzer::getPanzerPosition()
+Vector2 Panzer::getSize() const
 {
-    return this->PanzerPosition;
+    return size;
 }
 
-Vector2 panzer::getPanzerSize()
+std::vector<Vector2> &Panzer::getBullets()
 {
-    return this->PanzerSize;
+    return bullets;
 }
 
-std::vector<Vector2> &panzer::getPanzerBullets()
+void Panzer::setIsHit(bool state)
 {
-    return this->PanzerBullets;
+    isHit = state;
 }
 
-// setters
-void panzer::setIsPanzerHit(bool state)
+void Panzer::setPosition(Vector2 pos)
 {
-    this->IsPanzerHit = state;
+    position = pos;
 }
 
-void panzer::setPanzerPosition(Vector2 coordinates)
+void Panzer::setSize(Vector2 newSize)
 {
-    this->PanzerPosition = coordinates;
+    size = newSize;
 }
 
-void panzer::setPanzerSize(Vector2 size)
+void Panzer::setMovementSpeed(float speed)
 {
-    this->PanzerSize = size;
+    movementSpeed = speed;
 }
 
-void panzer::setMovementSpeed(float speed)
+void Panzer::setShootingVelocity(float vel)
 {
-    this->MovementSpeed = speed;
+    shootingVelocity = vel;
 }
 
-void panzer::setShootingVelocity(float vel)
+void Panzer::addBullet(Vector2 bullet)
 {
-    this->ShootingVelocity = vel;
+    bullets.push_back(bullet);
 }
 
-// logic
-void panzer::addPanzerBullets(Vector2 bullet)
+void Panzer::resetBullets()
 {
-    this->PanzerBullets.push_back(bullet);
+    bullets.clear();
 }
 
-void panzer::resetPanzerBullets()
+void Panzer::moveY(char op)
 {
-    this->PanzerBullets.clear();
-}
-
-void panzer::changePanzerPositionY(char op) // op for operator
-{
-    switch (op) // op for operator
-    {
-    case '-':
-        this->PanzerPosition.y = getPanzerPosition().y - getMovementSpeed();
-        break;
-    case '+':
-        this->PanzerPosition.y = getPanzerPosition().y + getMovementSpeed();
-        break;
-    default:
-        std::cerr << "Wrong operator for panzer::changePanzerPositionY(char operator)";
-    }
+    if (op == '-')
+        position.y -= movementSpeed;
+    else if (op == '+')
+        position.y += movementSpeed;
+    else
+        std::cerr << "Panzer::moveY: bad operator\n";
 }

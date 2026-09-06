@@ -57,11 +57,13 @@
 
 +made by Luis Zabransky on the bottom of the home screen
 
--cleanup code
-    -buttons in classes and button logics and etc all
-        -different files etc. all simple and easy to understand
-    -optimize it
-    -use .hpp instead of .h
-    -all in one code style easy, simple, primitive and modern 
++cleanup code
+    +buttons in classes and button logics and etc all
+        +different files etc. all simple and easy to understand
+    +optimize it
+    +use .hpp instead of .h
+    +all in one code style easy, simple, primitive and modern 
 
--add cmake
++add cmake/make to run compile etc
+
+-update readme, add tutorial to add custom backgrounds, shooting sounds and what to look out for

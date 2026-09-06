@@ -41,10 +41,7 @@ A simple 2D local multiplayer tank game built with C++ and Raylib. Two players f
 Make sure you have the Raylib library installed on your system. You can compile the game from the terminal using `g++`:
 
 ```bash
-g++ main.cpp panzer.cpp -o main -lraylib 
-./main
-
-# for X11:
-g++ main.cpp panzer.cpp -o panzer_war -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
-./panzer_war
+cd src
+g++ main.cpp panzer.cpp settings.cpp ui.cpp button.cpp -o ../bin/panzer_war -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+../bin/panzer_war
 ```

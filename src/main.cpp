@@ -1,48 +1,41 @@
 #include "raylib.h"
-
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
-
-#include "panzer.h"
-#include "settings.h"
-
-#include <iostream>
-#include <vector>
-#include <cstring>
+#include "panzer.hpp"
+#include "settings.hpp"
+#include "ui.hpp"
+#include "button.hpp"
 #include <algorithm>
+#include <cstring>
+#include <iostream>
+#include <string>
+#include <vector>
 
 int main()
 {
+  // --- settings / window ---
   Settings settings = loadSettings();
   printSettings(settings);
-  Resolution resolution = settingsGetScreenWidth(settings);
+  Resolution resolution = parseResolution(settings);
 
   if (resolution.isEmpty())
   {
     initSettings();
     settings = loadSettings();
-    resolution = settingsGetScreenWidth(settings);
+    resolution = parseResolution(settings);
   }
 
-  int screenWidth{resolution.x};
-  int screenHeight{resolution.y};
-  const float BASE_W = 1920.0f;
-  const float BASE_H = 1080.0f;
-  float uiScale = (float)screenHeight / BASE_H;
+  int screenWidth = resolution.x;
+  int screenHeight = resolution.y;
+  float uiScale = Ui::scale(screenHeight);
 
   float placeToBorder = 30.0f * uiScale;
   float hudBarHeight = 90.0f * uiScale;
 
-  // Window Settings
-
-  if (settings.screen == Fullscreen)
-  {
+  if (settings.screen == ScreenMode::Fullscreen)
     SetConfigFlags(FLAG_FULLSCREEN_MODE);
-  }
-  else if (settings.screen == BorderlessWindow)
-  {
+  else if (settings.screen == ScreenMode::Borderless)
     SetConfigFlags(FLAG_WINDOW_UNDECORATED);
-  }
 
   InitAudioDevice();
   InitWindow(screenWidth, screenHeight, "Panzer War");
@@ -54,55 +47,15 @@ int main()
   Sound clickSound = LoadSound("../resources/ui/click.wav");
   int lastGuiHover = -1;
 
-  // shared UI look
-  Color uiBg = {22, 24, 28, 255};
-  Color uiPanel = {36, 40, 48, 255};
-  Color uiBtn = {58, 66, 78, 255};
-  Color uiBtnHover = {100, 115, 135, 255};
-  Color uiBtnPress = {38, 44, 52, 255};
-  Color uiBorder = {72, 80, 92, 255};
-  Color uiAccent = {212, 168, 70, 255};
-  Color uiText = {230, 230, 230, 255};
-  Color uiMuted = {155, 160, 170, 255};
+  Ui::applyRayguiStyle();
 
-  GuiSetStyle(BUTTON, BORDER_WIDTH, 3);
-  GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(uiBtn));
-  GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(uiBtnHover));
-  GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt(uiBtnPress));
-  GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt(uiBorder));
-  GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt(uiAccent));
-  GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED, ColorToInt(uiAccent));
-  GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(uiText));
-  GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
-  GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED, ColorToInt(uiMuted));
-
-  GuiSetStyle(SLIDER, BORDER_WIDTH, 3);
-  GuiSetStyle(SLIDER, BASE_COLOR_NORMAL, ColorToInt(uiBtn));
-  GuiSetStyle(SLIDER, BASE_COLOR_FOCUSED, ColorToInt(uiBtnHover));
-  GuiSetStyle(SLIDER, BASE_COLOR_PRESSED, ColorToInt(uiAccent));
-  GuiSetStyle(SLIDER, BORDER_COLOR_NORMAL, ColorToInt(uiBorder));
-  GuiSetStyle(SLIDER, BORDER_COLOR_FOCUSED, ColorToInt(uiAccent));
-  GuiSetStyle(SLIDER, BORDER_COLOR_PRESSED, ColorToInt(uiAccent));
-  GuiSetStyle(SLIDER, TEXT_COLOR_NORMAL, ColorToInt(uiText));
-  GuiSetStyle(SLIDER, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
-  GuiSetStyle(SLIDER, TEXT_COLOR_PRESSED, ColorToInt(WHITE));
-
-  // load sprite and crop empty space
-  auto LoadSprite = [](const char *path, Rectangle crop) -> Texture2D
-  {
-    Image img = LoadImage(path);
-    ImageCrop(&img, crop);
-    Texture2D tex = LoadTextureFromImage(img);
-    UnloadImage(img);
-    return tex;
-  };
-
-  Texture2D blueTank = LoadSprite("../resources/sprites/bluetank.png", {336, 736, 1328, 528});
-  Texture2D blueTankFire = LoadSprite("../resources/sprites/bluetankfire.png", {8, 736, 1656, 528});
-  Texture2D redTank = LoadSprite("../resources/sprites/redtank.png", {336, 736, 1328, 528});
-  Texture2D redTankFire = LoadSprite("../resources/sprites/redtankfire.png", {352, 736, 1640, 528});
-  Texture2D fireballLeft = LoadSprite("../resources/sprites/fireball-goingleft.png", {88, 472, 1792, 968});
-  Texture2D fireballRight = LoadSprite("../resources/sprites/fireball-goingright.png", {80, 480, 1792, 960});
+  // --- sprites ---
+  Texture2D blueTank = Ui::loadCroppedTexture("../resources/sprites/bluetank.png", {336, 736, 1328, 528});
+  Texture2D blueTankFire = Ui::loadCroppedTexture("../resources/sprites/bluetankfire.png", {8, 736, 1656, 528});
+  Texture2D redTank = Ui::loadCroppedTexture("../resources/sprites/redtank.png", {336, 736, 1328, 528});
+  Texture2D redTankFire = Ui::loadCroppedTexture("../resources/sprites/redtankfire.png", {352, 736, 1640, 528});
+  Texture2D fireballLeft = Ui::loadCroppedTexture("../resources/sprites/fireball-goingleft.png", {88, 472, 1792, 968});
+  Texture2D fireballRight = Ui::loadCroppedTexture("../resources/sprites/fireball-goingright.png", {80, 480, 1792, 960});
 
   float panzerHeight = 160.0f * uiScale;
   float panzerWidth = panzerHeight * ((float)redTank.width / (float)redTank.height);
@@ -112,56 +65,12 @@ int main()
   float p1FireTimer = 0.0f;
   float p2FireTimer = 0.0f;
 
-  auto GetColorFromString = [](std::string colorStr) -> Color
-  {
-    if (colorStr == "WHITE")
-      return WHITE;
-    if (colorStr == "GRAY")
-      return GRAY;
-    if (colorStr == "LIGHTGRAY")
-      return LIGHTGRAY;
-    if (colorStr == "YELLOW")
-      return YELLOW;
-    if (colorStr == "GOLD")
-      return GOLD;
-    if (colorStr == "ORANGE")
-      return ORANGE;
-    if (colorStr == "PINK")
-      return PINK;
-    if (colorStr == "MAROON")
-      return MAROON;
-    if (colorStr == "GREEN")
-      return GREEN;
-    if (colorStr == "LIME")
-      return LIME;
-    if (colorStr == "DARKGREEN")
-      return DARKGREEN;
-    if (colorStr == "SKYBLUE")
-      return SKYBLUE;
-    if (colorStr == "DARKBLUE")
-      return DARKBLUE;
-    if (colorStr == "PURPLE")
-      return PURPLE;
-    if (colorStr == "VIOLET")
-      return VIOLET;
-    if (colorStr == "DARKPURPLE")
-      return DARKPURPLE;
-    if (colorStr == "BEIGE")
-      return BEIGE;
-    if (colorStr == "BROWN")
-      return BROWN;
-    if (colorStr == "DARKBROWN")
-      return DARKBROWN;
-    if (colorStr == "MAGENTA")
-      return MAGENTA;
-    return BLACK;
-  };
-
+  // --- background ---
   Texture2D bgTexture = {0};
   bool useBgTexture = false;
   Color bgColor = BLACK;
 
-  auto LoadNewBackground = [&](std::string bgStr)
+  auto LoadNewBackground = [&](const std::string &bgStr)
   {
     if (useBgTexture)
     {
@@ -175,21 +84,17 @@ int main()
     }
     else
     {
-      bgColor = GetColorFromString(bgStr);
+      bgColor = Ui::colorFromName(bgStr);
     }
   };
 
   LoadNewBackground(settings.background);
 
-  // panzer 1
-  Vector2 panzerSize1{panzerWidth, panzerHeight};
-  Vector2 defaultPanzerPosition1{(float)placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
-  panzer panzer1(defaultPanzerPosition1, panzerSize1);
-
-  // panzer 2
-  Vector2 panzerSize2{panzerWidth, panzerHeight};
-  Vector2 defaultPanzerPosition2{screenWidth - panzerSize2.x - placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
-  panzer panzer2(defaultPanzerPosition2, panzerSize2);
+  // --- tanks ---
+  Vector2 defaultPanzerPosition1{placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
+  Vector2 defaultPanzerPosition2{screenWidth - panzerWidth - placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
+  Panzer panzer1(defaultPanzerPosition1, {panzerWidth, panzerHeight});
+  Panzer panzer2(defaultPanzerPosition2, {panzerWidth, panzerHeight});
 
   int scoreP1 = 0;
   int scoreP2 = 0;
@@ -202,9 +107,8 @@ int main()
   float p1ReloadTimer = 0.0f;
   float p2ReloadTimer = 0.0f;
 
-  int gameModeActive = 0; // 0: Survival, 1: Deathmatch, 2: Custom
+  int gameModeActive = 0; // 0 Survival, 1 Deathmatch, 2 Custom
   int roundsActive = 0;
-
   float activeReloadTime = 2.0f;
 
   float customMoveSpeed = 10.0f;
@@ -212,53 +116,42 @@ int main()
   float customReloadSpeed = 1.0f;
   float customAmmoStart = 50.0f;
 
+  // --- menu layout sizes ---
   float buttonWidth = 450.0f * uiScale;
   float buttonHeight = 120.0f * uiScale;
   float buttonGap = 15.0f * uiScale;
   int menuTextFontSize = (int)(55 * uiScale);
-
-  bool startButtonAction{false};
-  int startButtonState{0};
-
-  bool gameModeMenuAction{false};
-  int gameModeMenuState{0};
-
-  bool settingsButtonAction{false};
-  int settingsButtonState{0};
-  bool settingsMenuReady{true};
-
-  bool tutorialButtonAction{false};
-  int tutorialButtonState{0};
-
-  int quitButtonState{0};
-  int hudHomeButtonState{0};
-
   int settingsFontTextSize = (int)(60 * uiScale);
 
-  // settings back button
   float settingsBackButtonWidth = 300.0f * uiScale;
   float settingsBackButtonHeight = 150.0f * uiScale;
-  Rectangle settingsBackButton{screenWidth / 2.0f - settingsBackButtonWidth / 2.0f,
-                               (float)(screenHeight - placeToBorder - settingsBackButtonHeight),
-                               settingsBackButtonWidth,
-                               settingsBackButtonHeight};
-  bool settingsBackButtonAction{false};
-  int settingsBackButtonState{0};
-  const char *settingsBackButtonText{"BACK"};
   int settingsBackButtonTextFontSize = (int)(80 * uiScale);
 
-  char shootSoundInput[64] = {0};
-  strncpy(shootSoundInput, settings.shootingSound.c_str(), 63);
+  // --- custom buttons ---
+  Button playBtn({}, "PLAY", menuTextFontSize);
+  Button gameModesBtn({}, "GAME MODES", menuTextFontSize);
+  Button settingsBtn({}, "SETTINGS", menuTextFontSize);
+  Button tutorialBtn({}, "HOW TO PLAY", menuTextFontSize);
+  Button quitBtn({}, "QUIT", menuTextFontSize);
+  Button backBtn({}, "BACK", settingsBackButtonTextFontSize);
+  Button homeBtn({}, "HOME", (int)(28 * uiScale));
+  Button matchMenuBtn({}, "MAIN MENU", menuTextFontSize);
+
+  bool inMatch = false;
+  bool inGameModes = false;
+  bool inSettings = false;
+  bool inTutorial = false;
+  bool settingsMenuReady = true;
 
   char switchSidesInput[64] = {0};
   strncpy(switchSidesInput, settings.switchSides ? "YES" : "NO", 63);
 
   int screenActive = 0;
-  if (settings.screen == Windowed)
+  if (settings.screen == ScreenMode::Windowed)
     screenActive = 0;
-  else if (settings.screen == BorderlessWindow)
+  else if (settings.screen == ScreenMode::Borderless)
     screenActive = 1;
-  else if (settings.screen == Fullscreen)
+  else if (settings.screen == ScreenMode::Fullscreen)
     screenActive = 2;
 
   const char *resolutions[] = {
@@ -327,56 +220,121 @@ int main()
   if (screenActive == 1 || screenActive == 2)
     ApplyWindowMode();
 
-  char backgroundInput[64] = {0};
-  strncpy(backgroundInput, settings.background.c_str(), 63);
-
-  // countdown
-  bool countdownStart{false};
-  int countdownStartTime{3};
-  float countdownTimer{0.0f};
-
-  Vector2 mousePoint = {0.f, 0.f};
-
   std::vector<std::string> availableSounds = getAvailableSounds();
-
   int soundActive = 0;
   for (size_t i = 0; i < availableSounds.size(); i++)
   {
     if ("../resources/" + availableSounds[i] == settings.shootingSound)
     {
-      soundActive = i;
+      soundActive = (int)i;
       break;
     }
   }
 
   std::vector<std::string> availableBackgrounds = getAvailableBackgrounds();
-
   int backgroundActive = 0;
   for (size_t i = 0; i < availableBackgrounds.size(); i++)
   {
     std::string matchStr = availableBackgrounds[i];
     if (matchStr.find('.') != std::string::npos)
-    {
       matchStr = "../resources/" + matchStr;
-    }
 
     if (matchStr == settings.background)
     {
-      backgroundActive = i;
+      backgroundActive = (int)i;
       break;
     }
   }
 
+  // --- countdown ---
+  bool countdownStart = false;
+  int countdownStartTime = 3;
+  float countdownTimer = 0.0f;
+
+  Vector2 mousePoint = {0.f, 0.f};
+
+  auto ResetMatchToMenu = [&]()
+  {
+    matchOver = false;
+    roundOver = false;
+    inMatch = false;
+    countdownStart = false;
+    panzer1.setIsHit(false);
+    panzer2.setIsHit(false);
+    panzer1.setPosition(defaultPanzerPosition1);
+    panzer2.setPosition(defaultPanzerPosition2);
+    panzer1.resetBullets();
+    panzer2.resetBullets();
+    scoreP1 = 0;
+    scoreP2 = 0;
+    p1FireTimer = 0.0f;
+    p2FireTimer = 0.0f;
+    lastGuiHover = -1;
+  };
+
+  auto StartMatch = [&]()
+  {
+    inMatch = true;
+    countdownStart = true;
+    countdownStartTime = 3;
+    countdownTimer = 0.0f;
+
+    float activeMove = 10.0f;
+    float activeShoot = 20.0f;
+    int startingAmmo = 50;
+
+    if (gameModeActive == 0)
+    {
+      activeReloadTime = 2.0f;
+      startingAmmo = 50;
+    }
+    else if (gameModeActive == 1)
+    {
+      activeReloadTime = 2.0f;
+      startingAmmo = 150;
+    }
+    else if (gameModeActive == 2)
+    {
+      activeMove = customMoveSpeed;
+      activeShoot = customShootSpeed;
+      activeReloadTime = customReloadSpeed;
+      startingAmmo = (int)customAmmoStart;
+    }
+
+    panzer1.setMovementSpeed(activeMove * uiScale);
+    panzer1.setShootingVelocity(activeShoot * uiScale);
+    panzer2.setMovementSpeed(activeMove * uiScale);
+    panzer2.setShootingVelocity(activeShoot * uiScale);
+
+    panzer1.setIsHit(false);
+    panzer2.setIsHit(false);
+    panzer1.setPosition(defaultPanzerPosition1);
+    panzer2.setPosition(defaultPanzerPosition2);
+    panzer1.resetBullets();
+    panzer2.resetBullets();
+
+    p1Ammo = startingAmmo;
+    p2Ammo = startingAmmo;
+    p1ReloadTimer = 0.0f;
+    p2ReloadTimer = 0.0f;
+    p1FireTimer = 0.0f;
+    p2FireTimer = 0.0f;
+    scoreP1 = 0;
+    scoreP2 = 0;
+    roundOver = false;
+    matchOver = false;
+    roundTransitionTimer = 0.0f;
+  };
+
+  // --- main loop ---
   while (!WindowShouldClose())
   {
     mousePoint = GetMousePosition();
 
-    // always use the real window / fullscreen size
     screenWidth = GetScreenWidth();
     screenHeight = GetScreenHeight();
 
-    // scale everything from 1920x1080 so layout stays the same
-    uiScale = (float)screenHeight / BASE_H;
+    uiScale = Ui::scale(screenHeight);
     placeToBorder = 30.0f * uiScale;
     hudBarHeight = 90.0f * uiScale;
     panzerHeight = 160.0f * uiScale;
@@ -391,254 +349,117 @@ int main()
     settingsBackButtonWidth = 300.0f * uiScale;
     settingsBackButtonHeight = 150.0f * uiScale;
     settingsBackButtonTextFontSize = (int)(80 * uiScale);
-    settingsBackButton = {screenWidth / 2.0f - settingsBackButtonWidth / 2.0f,
-                          screenHeight - placeToBorder - settingsBackButtonHeight,
-                          settingsBackButtonWidth,
-                          settingsBackButtonHeight};
 
-    panzer1.setPanzerSize({panzerWidth, panzerHeight});
-    panzer2.setPanzerSize({panzerWidth, panzerHeight});
+    panzer1.setSize({panzerWidth, panzerHeight});
+    panzer2.setSize({panzerWidth, panzerHeight});
     defaultPanzerPosition1 = {placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
     defaultPanzerPosition2 = {screenWidth - panzerWidth - placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
 
-    GuiSetStyle(BUTTON, BORDER_WIDTH, (int)std::max(1.0f, 3.0f * uiScale));
-    GuiSetStyle(SLIDER, BORDER_WIDTH, (int)std::max(1.0f, 3.0f * uiScale));
+    Ui::setBorderScale(uiScale);
 
-    int numButtons = 5;
+    // layout main menu buttons
+    const int numButtons = 5;
     float totalMenuHeight = (buttonHeight * numButtons) + (buttonGap * (numButtons - 1));
     float currentBtnY = screenHeight / 2.0f - totalMenuHeight / 2.0f;
+    float menuBtnX = screenWidth / 2.0f - buttonWidth / 2.0f;
 
-    Rectangle startButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
+    playBtn.setBounds({menuBtnX, currentBtnY, buttonWidth, buttonHeight});
+    playBtn.setFontSize(menuTextFontSize);
     currentBtnY += buttonHeight + buttonGap;
 
-    Rectangle gameModeButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
+    gameModesBtn.setBounds({menuBtnX, currentBtnY, buttonWidth, buttonHeight});
+    gameModesBtn.setFontSize(menuTextFontSize);
     currentBtnY += buttonHeight + buttonGap;
 
-    Rectangle settingsButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
+    settingsBtn.setBounds({menuBtnX, currentBtnY, buttonWidth, buttonHeight});
+    settingsBtn.setFontSize(menuTextFontSize);
     currentBtnY += buttonHeight + buttonGap;
 
-    Rectangle tutorialButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
+    tutorialBtn.setBounds({menuBtnX, currentBtnY, buttonWidth, buttonHeight});
+    tutorialBtn.setFontSize(menuTextFontSize);
     currentBtnY += buttonHeight + buttonGap;
 
-    Rectangle quitButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, buttonWidth, buttonHeight};
+    quitBtn.setBounds({menuBtnX, currentBtnY, buttonWidth, buttonHeight});
+    quitBtn.setFontSize(menuTextFontSize);
 
-    // Main Menu check
-    if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction && !gameModeMenuAction && !matchOver)
+    backBtn.setBounds({screenWidth / 2.0f - settingsBackButtonWidth / 2.0f,
+                       screenHeight - placeToBorder - settingsBackButtonHeight,
+                       settingsBackButtonWidth,
+                       settingsBackButtonHeight});
+    backBtn.setFontSize(settingsBackButtonTextFontSize);
+
+    // --- input: menus ---
+    bool onMainMenu = !inMatch && !inSettings && !inTutorial && !inGameModes && !matchOver;
+
+    if (onMainMenu)
     {
       lastGuiHover = -1;
 
-      // start button
-      if (CheckCollisionPointRec(mousePoint, startButton))
+      if (playBtn.update(mousePoint, hoverSound, clickSound))
+        StartMatch();
+
+      if (gameModesBtn.update(mousePoint, hoverSound, clickSound))
+        inGameModes = true;
+
+      if (settingsBtn.update(mousePoint, hoverSound, clickSound))
       {
-        if (startButtonState == 0)
-        {
-          StopSound(hoverSound);
-          PlaySound(hoverSound);
-        }
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-          startButtonState = 2;
-        else
-          startButtonState = 1;
-
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        {
-          StopSound(clickSound);
-          PlaySound(clickSound);
-
-          startButtonAction = true;
-          countdownStart = true;
-          countdownStartTime = 3;
-          countdownTimer = 0.0f;
-
-          float activeMove = 10.0f;
-          float activeShoot = 20.0f;
-          int startingAmmo = 50;
-
-          if (gameModeActive == 0)
-          {
-            activeReloadTime = 2.0f;
-            startingAmmo = 50;
-          }
-          else if (gameModeActive == 1)
-          {
-            activeReloadTime = 2.0f;
-            startingAmmo = 150;
-          }
-          else if (gameModeActive == 2)
-          {
-            activeMove = customMoveSpeed;
-            activeShoot = customShootSpeed;
-            activeReloadTime = customReloadSpeed;
-            startingAmmo = (int)customAmmoStart;
-          }
-
-          // Full Match Reset
-          panzer1.setMovementSpeed(activeMove * uiScale);
-          panzer1.setShootingVelocity(activeShoot * uiScale);
-          panzer2.setMovementSpeed(activeMove * uiScale);
-          panzer2.setShootingVelocity(activeShoot * uiScale);
-
-          panzer1.setIsPanzerHit(false);
-          panzer2.setIsPanzerHit(false);
-          panzer1.setPanzerPosition(defaultPanzerPosition1);
-          panzer2.setPanzerPosition(defaultPanzerPosition2);
-          panzer1.resetPanzerBullets();
-          panzer2.resetPanzerBullets();
-
-          p1Ammo = startingAmmo;
-          p2Ammo = startingAmmo;
-          p1ReloadTimer = 0.0f;
-          p2ReloadTimer = 0.0f;
-          p1FireTimer = 0.0f;
-          p2FireTimer = 0.0f;
-          scoreP1 = 0;
-          scoreP2 = 0;
-          roundOver = false;
-          matchOver = false;
-          roundTransitionTimer = 0.0f;
-        }
-      }
-      else
-      {
-        startButtonState = 0;
+        inSettings = true;
+        settingsMenuReady = false;
       }
 
-      // game mode menu button
-      if (CheckCollisionPointRec(mousePoint, gameModeButton))
-      {
-        if (gameModeMenuState == 0)
-        {
-          StopSound(hoverSound);
-          PlaySound(hoverSound);
-        }
+      if (tutorialBtn.update(mousePoint, hoverSound, clickSound))
+        inTutorial = true;
 
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-          gameModeMenuState = 2;
-        else
-          gameModeMenuState = 1;
-
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        {
-          StopSound(clickSound);
-          PlaySound(clickSound);
-          gameModeMenuAction = true;
-        }
-      }
-      else
-      {
-        gameModeMenuState = 0;
-      }
-
-      // tutorial button
-      if (CheckCollisionPointRec(mousePoint, tutorialButton))
-      {
-        if (tutorialButtonState == 0)
-        {
-          StopSound(hoverSound);
-          PlaySound(hoverSound);
-        }
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-          tutorialButtonState = 2;
-        else
-          tutorialButtonState = 1;
-
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        {
-          StopSound(clickSound);
-          PlaySound(clickSound);
-          tutorialButtonAction = true;
-        }
-      }
-      else
-      {
-        tutorialButtonState = 0;
-      }
-
-      // settings button
-      if (CheckCollisionPointRec(mousePoint, settingsButton))
-      {
-        if (settingsButtonState == 0)
-        {
-          StopSound(hoverSound);
-          PlaySound(hoverSound);
-        }
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-          settingsButtonState = 2;
-        else
-          settingsButtonState = 1;
-
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        {
-          StopSound(clickSound);
-          PlaySound(clickSound);
-          settingsButtonAction = true;
-          settingsMenuReady = false;
-        }
-      }
-      else
-      {
-        settingsButtonState = 0;
-      }
-
-      // quit button
-      if (CheckCollisionPointRec(mousePoint, quitButton))
-      {
-        if (quitButtonState == 0)
-        {
-          StopSound(hoverSound);
-          PlaySound(hoverSound);
-        }
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-          quitButtonState = 2;
-        else
-          quitButtonState = 1;
-
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        {
-          StopSound(clickSound);
-          PlaySound(clickSound);
-          break;
-        }
-      }
-      else
-      {
-        quitButtonState = 0;
-      }
+      if (quitBtn.update(mousePoint, hoverSound, clickSound))
+        break;
     }
-    else if (settingsButtonAction || tutorialButtonAction || gameModeMenuAction)
+    else if (inSettings || inTutorial || inGameModes)
     {
-      // settings back button
-      if (CheckCollisionPointRec(mousePoint, settingsBackButton))
+      if (backBtn.update(mousePoint, hoverSound, clickSound))
       {
-        if (settingsBackButtonState == 0)
+        if (inGameModes)
         {
-          StopSound(hoverSound);
-          PlaySound(hoverSound);
+          inGameModes = false;
+          lastGuiHover = -1;
         }
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-          settingsBackButtonState = 2;
-        else
-          settingsBackButtonState = 1;
-
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        else if (inTutorial)
         {
-          StopSound(clickSound);
-          PlaySound(clickSound);
-          settingsBackButtonAction = true;
+          inTutorial = false;
         }
-      }
-      else
-      {
-        settingsBackButtonState = 0;
+        else if (inSettings)
+        {
+          settings.shootingSound = "../resources/" + availableSounds[soundActive];
+          settings.resolution = resolutions[resolutionActive];
+
+          std::string bgToSave = availableBackgrounds[backgroundActive];
+          if (bgToSave.find('.') != std::string::npos)
+            settings.background = "../resources/" + bgToSave;
+          else
+            settings.background = bgToSave;
+
+          settings.switchSides = (std::string(switchSidesInput) == "YES");
+
+          if (screenActive == 0)
+            settings.screen = ScreenMode::Windowed;
+          else if (screenActive == 1)
+            settings.screen = ScreenMode::Borderless;
+          else
+            settings.screen = ScreenMode::Fullscreen;
+
+          saveSettings(settings);
+
+          UnloadSound(currentShootSound);
+          currentShootSound = LoadSound(settings.shootingSound.c_str());
+          LoadNewBackground(settings.background);
+
+          inSettings = false;
+          lastGuiHover = -1;
+        }
       }
     }
 
-    if (startButtonAction && !countdownStart && !matchOver)
+    // --- match logic ---
+    if (inMatch && !countdownStart && !matchOver)
     {
       if (p1ReloadTimer > 0)
         p1ReloadTimer -= GetFrameTime();
@@ -654,21 +475,19 @@ int main()
         roundTransitionTimer += GetFrameTime();
         if (roundTransitionTimer >= 2.0f)
         {
-          int winsNeeded = (roundsActive == 0) ? 2 : (roundsActive == 1) ? 3
-                                                                         : 4;
+          int winsNeeded = (roundsActive == 0) ? 2 : (roundsActive == 1) ? 3 : 4;
           if (scoreP1 >= winsNeeded || scoreP2 >= winsNeeded)
           {
             matchOver = true;
           }
           else
           {
-            // Reset just the round variables
-            panzer1.setIsPanzerHit(false);
-            panzer2.setIsPanzerHit(false);
-            panzer1.setPanzerPosition(defaultPanzerPosition1);
-            panzer2.setPanzerPosition(defaultPanzerPosition2);
-            panzer1.resetPanzerBullets();
-            panzer2.resetPanzerBullets();
+            panzer1.setIsHit(false);
+            panzer2.setIsHit(false);
+            panzer1.setPosition(defaultPanzerPosition1);
+            panzer2.setPosition(defaultPanzerPosition2);
+            panzer1.resetBullets();
+            panzer2.resetBullets();
 
             if (gameModeActive == 0)
             {
@@ -700,23 +519,23 @@ int main()
       }
       else
       {
-        // for panzer1
-        if (!panzer1.getIsPanzerHit())
+        // player 1
+        if (!panzer1.getIsHit())
         {
           if (IsKeyDown(KEY_W))
           {
-            if (panzer1.getPanzerPosition().y > hudBarHeight + placeToBorder)
-              panzer1.changePanzerPositionY('-');
+            if (panzer1.getPosition().y > hudBarHeight + placeToBorder)
+              panzer1.moveY('-');
           }
           if (IsKeyDown(KEY_S))
           {
-            if (panzer1.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
-              panzer1.changePanzerPositionY('+');
+            if (panzer1.getPosition().y < screenHeight - panzer1.getSize().y - placeToBorder)
+              panzer1.moveY('+');
           }
           if (IsKeyPressed(KEY_D) && p1ReloadTimer <= 0.0f && p1Ammo != 0)
           {
-            panzer1.addPanzerBullets({panzer1.getPanzerPosition().x + panzer1.getPanzerSize().x,
-                                      panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2 - 35.0f * uiScale});
+            panzer1.addBullet({panzer1.getPosition().x + panzer1.getSize().x,
+                               panzer1.getPosition().y + panzer1.getSize().y / 2 - 35.0f * uiScale});
 
             if (p1Ammo > 0)
               p1Ammo--;
@@ -726,38 +545,38 @@ int main()
             StopSound(currentShootSound);
             PlaySound(currentShootSound);
           }
-          for (Vector2 &fired : panzer1.getPanzerBullets())
+          for (Vector2 &fired : panzer1.getBullets())
           {
             fired.x += panzer1.getShootingVelocity();
-            Rectangle panzer2Hitbox{panzer2.getPanzerPosition().x, panzer2.getPanzerPosition().y,
-                                    panzer2.getPanzerSize().x, panzer2.getPanzerSize().y};
+            Rectangle panzer2Hitbox{panzer2.getPosition().x, panzer2.getPosition().y,
+                                    panzer2.getSize().x, panzer2.getSize().y};
 
-            if (!panzer2.getIsPanzerHit() && CheckCollisionCircleRec(fired, bulletRadius, panzer2Hitbox))
+            if (!panzer2.getIsHit() && CheckCollisionCircleRec(fired, bulletRadius, panzer2Hitbox))
             {
-              panzer2.setIsPanzerHit(true);
+              panzer2.setIsHit(true);
               scoreP1++;
               roundOver = true;
             }
           }
         }
 
-        // for panzer2
-        if (!panzer2.getIsPanzerHit())
+        // player 2
+        if (!panzer2.getIsHit())
         {
           if (IsKeyDown(KEY_UP))
           {
-            if (panzer2.getPanzerPosition().y > hudBarHeight + placeToBorder)
-              panzer2.changePanzerPositionY('-');
+            if (panzer2.getPosition().y > hudBarHeight + placeToBorder)
+              panzer2.moveY('-');
           }
           if (IsKeyDown(KEY_DOWN))
           {
-            if (panzer2.getPanzerPosition().y < screenHeight - panzer2.getPanzerSize().y - placeToBorder)
-              panzer2.changePanzerPositionY('+');
+            if (panzer2.getPosition().y < screenHeight - panzer2.getSize().y - placeToBorder)
+              panzer2.moveY('+');
           }
           if (IsKeyPressed(KEY_LEFT) && p2ReloadTimer <= 0.0f && p2Ammo != 0)
           {
-            panzer2.addPanzerBullets({panzer2.getPanzerPosition().x,
-                                      panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2 - 35.0f * uiScale});
+            panzer2.addBullet({panzer2.getPosition().x,
+                               panzer2.getPosition().y + panzer2.getSize().y / 2 - 35.0f * uiScale});
 
             if (p2Ammo > 0)
               p2Ammo--;
@@ -767,15 +586,15 @@ int main()
             StopSound(currentShootSound);
             PlaySound(currentShootSound);
           }
-          for (Vector2 &fired : panzer2.getPanzerBullets())
+          for (Vector2 &fired : panzer2.getBullets())
           {
             fired.x -= panzer2.getShootingVelocity();
-            Rectangle panzer1Hitbox{panzer1.getPanzerPosition().x, panzer1.getPanzerPosition().y,
-                                    panzer1.getPanzerSize().x, panzer1.getPanzerSize().y};
+            Rectangle panzer1Hitbox{panzer1.getPosition().x, panzer1.getPosition().y,
+                                    panzer1.getSize().x, panzer1.getSize().y};
 
-            if (!panzer1.getIsPanzerHit() && CheckCollisionCircleRec(fired, bulletRadius, panzer1Hitbox))
+            if (!panzer1.getIsHit() && CheckCollisionCircleRec(fired, bulletRadius, panzer1Hitbox))
             {
-              panzer1.setIsPanzerHit(true);
+              panzer1.setIsHit(true);
               scoreP2++;
               roundOver = true;
             }
@@ -793,47 +612,13 @@ int main()
         countdownTimer = 0.0f;
       }
       if (countdownStartTime <= 0)
-      {
         countdownStart = false;
-      }
     }
 
+    // --- draw ---
     BeginDrawing();
 
-    auto DrawUiButton = [&](Rectangle rec, const char *text, int state, int fontSize)
-    {
-      Color fill = uiBtn;
-      Color border = uiBorder;
-      if (state == 1)
-      {
-        fill = uiBtnHover;
-        border = uiAccent;
-      }
-      else if (state == 2)
-      {
-        fill = uiBtnPress;
-        border = uiAccent;
-      }
-
-      DrawRectangleRec(rec, fill);
-      DrawRectangleLinesEx(rec, std::max(1.0f, 3.0f * uiScale), border);
-      int tw = MeasureText(text, fontSize);
-      DrawText(text, rec.x + (rec.width - tw) / 2.0f, rec.y + (rec.height - fontSize) / 2.0f, fontSize, uiText);
-    };
-
-    auto DrawUiTitle = [&](const char *text, float y, int fontSize)
-    {
-      int tw = MeasureText(text, fontSize);
-      DrawText(text, screenWidth / 2 - tw / 2, y, fontSize, uiAccent);
-    };
-
-    auto DrawUiPanel = [&](Rectangle rec)
-    {
-      DrawRectangleRec(rec, uiPanel);
-      DrawRectangleLinesEx(rec, std::max(1.0f, 2.0f * uiScale), uiBorder);
-    };
-
-    if (startButtonAction)
+    if (inMatch)
     {
       if (useBgTexture)
       {
@@ -849,82 +634,55 @@ int main()
     }
     else
     {
-      ClearBackground(uiBg);
+      ClearBackground(Ui::bg);
     }
 
-    if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction && !gameModeMenuAction && !matchOver)
+    // main menu
+    if (onMainMenu)
     {
-      DrawUiTitle("PANZER WAR", 80.0f * uiScale, (int)(90 * uiScale));
+      Ui::drawTitle("PANZER WAR", 80.0f * uiScale, (int)(90 * uiScale), screenWidth);
 
       float panelPad = 35.0f * uiScale;
-      DrawUiPanel({startButton.x - panelPad, startButton.y - panelPad,
-                   startButton.width + panelPad * 2.0f, totalMenuHeight + panelPad * 2.0f});
+      Ui::drawPanel({playBtn.bounds.x - panelPad, playBtn.bounds.y - panelPad,
+                     playBtn.bounds.width + panelPad * 2.0f, totalMenuHeight + panelPad * 2.0f},
+                    uiScale);
 
-      DrawUiButton(startButton, "PLAY", startButtonState, menuTextFontSize);
-      DrawUiButton(gameModeButton, "GAME MODES", gameModeMenuState, menuTextFontSize);
-      DrawUiButton(settingsButton, "SETTINGS", settingsButtonState, menuTextFontSize);
-      DrawUiButton(tutorialButton, "HOW TO PLAY", tutorialButtonState, menuTextFontSize);
-      DrawUiButton(quitButton, "QUIT", quitButtonState, menuTextFontSize);
+      playBtn.draw(uiScale);
+      gameModesBtn.draw(uiScale);
+      settingsBtn.draw(uiScale);
+      tutorialBtn.draw(uiScale);
+      quitBtn.draw(uiScale);
 
       const char *credit = "made by Luis Zabransky";
       int creditFont = (int)(28 * uiScale);
       DrawText(credit, screenWidth / 2 - MeasureText(credit, creditFont) / 2,
-               screenHeight - (int)(50 * uiScale), creditFont, uiMuted);
+               screenHeight - (int)(50 * uiScale), creditFont, Ui::muted);
     }
 
-    if (startButtonAction)
+    // match screen
+    if (inMatch)
     {
       if (matchOver)
       {
-        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(uiBg, 0.7f));
-        DrawUiTitle((scoreP1 > scoreP2) ? "PLAYER 1 WINS THE MATCH!" : "PLAYER 2 WINS THE MATCH!",
-                    screenHeight / 2.0f - 120.0f * uiScale, (int)(70 * uiScale));
+        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(Ui::bg, 0.7f));
+        Ui::drawTitle((scoreP1 > scoreP2) ? "PLAYER 1 WINS THE MATCH!" : "PLAYER 2 WINS THE MATCH!",
+                      screenHeight / 2.0f - 120.0f * uiScale, (int)(70 * uiScale), screenWidth);
 
-        Rectangle menuBtn = {screenWidth / 2.0f - buttonWidth / 2.0f, screenHeight / 2.0f + 50.0f * uiScale, buttonWidth, buttonHeight};
-        int matchBtnState = 0;
+        matchMenuBtn.setBounds({screenWidth / 2.0f - buttonWidth / 2.0f,
+                                screenHeight / 2.0f + 50.0f * uiScale,
+                                buttonWidth, buttonHeight});
+        matchMenuBtn.setFontSize(menuTextFontSize);
 
-        if (CheckCollisionPointRec(mousePoint, menuBtn))
-        {
-          matchBtnState = IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? 2 : 1;
+        if (matchMenuBtn.update(mousePoint, hoverSound, clickSound))
+          ResetMatchToMenu();
 
-          if (lastGuiHover != 100)
-          {
-            lastGuiHover = 100;
-            StopSound(hoverSound);
-            PlaySound(hoverSound);
-          }
-
-          if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-          {
-            StopSound(clickSound);
-            PlaySound(clickSound);
-            matchOver = false;
-            roundOver = false;
-            startButtonAction = false;
-            countdownStart = false;
-            panzer1.setIsPanzerHit(false);
-            panzer2.setIsPanzerHit(false);
-            panzer1.setPanzerPosition(defaultPanzerPosition1);
-            panzer2.setPanzerPosition(defaultPanzerPosition2);
-            panzer1.resetPanzerBullets();
-            panzer2.resetPanzerBullets();
-            scoreP1 = 0;
-            scoreP2 = 0;
-            lastGuiHover = -1;
-          }
-        }
-        else if (lastGuiHover == 100)
-        {
-          lastGuiHover = -1;
-        }
-
-        DrawUiButton(menuBtn, "MAIN MENU", matchBtnState, menuTextFontSize);
+        matchMenuBtn.draw(uiScale);
       }
       else
       {
-        // HUD bar (not part of playfield)
-        DrawRectangle(0, 0, screenWidth, hudBarHeight, uiPanel);
-        DrawRectangle(0, hudBarHeight - 3.0f * uiScale, screenWidth, std::max(2.0f, 3.0f * uiScale), uiAccent);
+        // HUD bar
+        DrawRectangle(0, 0, screenWidth, hudBarHeight, Ui::panel);
+        DrawRectangle(0, hudBarHeight - 3.0f * uiScale, screenWidth, std::max(2.0f, 3.0f * uiScale), Ui::accent);
 
         const char *p1AmmoStr = (p1Ammo < 0) ? "INF" : TextFormat("%d", p1Ammo);
         const char *p2AmmoStr = (p2Ammo < 0) ? "INF" : TextFormat("%d", p2Ammo);
@@ -938,162 +696,123 @@ int main()
         int reloadFont = (int)(20 * uiScale);
         DrawText(p1Text, (int)(30 * uiScale), (int)(28 * uiScale), hudFont, p1Color);
         if (p1ReloadTimer > 0)
-          DrawText("RELOADING", (int)(30 * uiScale), (int)(62 * uiScale), reloadFont, uiAccent);
+          DrawText("RELOADING", (int)(30 * uiScale), (int)(62 * uiScale), reloadFont, Ui::accent);
 
         int p2Width = MeasureText(p2Text, hudFont);
         DrawText(p2Text, screenWidth - p2Width - (int)(30 * uiScale), (int)(28 * uiScale), hudFont, p2Color);
         if (p2ReloadTimer > 0)
-          DrawText("RELOADING", screenWidth - MeasureText("RELOADING", reloadFont) - (int)(30 * uiScale), (int)(62 * uiScale), reloadFont, uiAccent);
+          DrawText("RELOADING", screenWidth - MeasureText("RELOADING", reloadFont) - (int)(30 * uiScale),
+                   (int)(62 * uiScale), reloadFont, Ui::accent);
 
-        // home / quit back to menu
         float homeBtnW = 160.0f * uiScale;
         float homeBtnH = 50.0f * uiScale;
-        Rectangle hudHomeBtn = {screenWidth / 2.0f - homeBtnW / 2.0f, (hudBarHeight - homeBtnH) / 2.0f, homeBtnW, homeBtnH};
+        homeBtn.setBounds({screenWidth / 2.0f - homeBtnW / 2.0f, (hudBarHeight - homeBtnH) / 2.0f, homeBtnW, homeBtnH});
+        homeBtn.setFontSize((int)(28 * uiScale));
 
-        if (CheckCollisionPointRec(mousePoint, hudHomeBtn))
-        {
-          if (hudHomeButtonState == 0)
-          {
-            StopSound(hoverSound);
-            PlaySound(hoverSound);
-          }
-          hudHomeButtonState = IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? 2 : 1;
+        if (homeBtn.update(mousePoint, hoverSound, clickSound))
+          ResetMatchToMenu();
 
-          if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-          {
-            StopSound(clickSound);
-            PlaySound(clickSound);
-            matchOver = false;
-            roundOver = false;
-            startButtonAction = false;
-            countdownStart = false;
-            panzer1.setIsPanzerHit(false);
-            panzer2.setIsPanzerHit(false);
-            panzer1.setPanzerPosition(defaultPanzerPosition1);
-            panzer2.setPanzerPosition(defaultPanzerPosition2);
-            panzer1.resetPanzerBullets();
-            panzer2.resetPanzerBullets();
-            scoreP1 = 0;
-            scoreP2 = 0;
-            p1FireTimer = 0.0f;
-            p2FireTimer = 0.0f;
-            hudHomeButtonState = 0;
-          }
-        }
-        else
-        {
-          hudHomeButtonState = 0;
-        }
-
-        DrawUiButton(hudHomeBtn, "HOME", hudHomeButtonState, (int)(28 * uiScale));
+        homeBtn.draw(uiScale);
 
         if (countdownStart)
         {
           const char *text = TextFormat("%d", countdownStartTime);
           int cdFont = (int)(120 * uiScale);
-          DrawText(text, screenWidth / 2 - MeasureText(text, cdFont) / 2, screenHeight / 2 - (int)(60 * uiScale), cdFont, uiAccent);
+          DrawText(text, screenWidth / 2 - MeasureText(text, cdFont) / 2,
+                   screenHeight / 2 - (int)(60 * uiScale), cdFont, Ui::accent);
         }
         else
         {
-        if (roundOver)
-        {
-          const char *rwText = panzer2.getIsPanzerHit() ? "PLAYER 1 WINS ROUND!" : "PLAYER 2 WINS ROUND!";
-          int rwFont = (int)(60 * uiScale);
-          DrawText(rwText, screenWidth / 2 - MeasureText(rwText, rwFont) / 2, screenHeight / 2 - (int)(30 * uiScale), rwFont, uiAccent);
-        }
-
-        // for panzer1
-        if (!panzer1.getIsPanzerHit())
-        {
-          Texture2D panzer1Tex = blueTank;
-          Texture2D panzer1Idle = blueTank;
-          float flip = -1.0f; // blue faces left, flip to face right
-
-          if (settings.switchSides)
+          if (roundOver)
           {
-            panzer1Tex = redTank;
-            panzer1Idle = redTank;
-            flip = 1.0f; // red already faces right
+            const char *rwText = panzer2.getIsHit() ? "PLAYER 1 WINS ROUND!" : "PLAYER 2 WINS ROUND!";
+            int rwFont = (int)(60 * uiScale);
+            DrawText(rwText, screenWidth / 2 - MeasureText(rwText, rwFont) / 2,
+                     screenHeight / 2 - (int)(30 * uiScale), rwFont, Ui::accent);
           }
 
-          if (p1FireTimer > 0)
+          // panzer 1
+          if (!panzer1.getIsHit())
           {
+            Texture2D panzer1Tex = blueTank;
+            Texture2D panzer1Idle = blueTank;
+            float flip = -1.0f;
+
             if (settings.switchSides)
-              panzer1Tex = redTankFire;
-            else
-              panzer1Tex = blueTankFire;
-          }
+            {
+              panzer1Tex = redTank;
+              panzer1Idle = redTank;
+              flip = 1.0f;
+            }
 
-          float scale = panzerHeight / (float)panzer1Idle.height;
-          float drawW = panzer1Tex.width * scale;
-          float drawH = panzer1Tex.height * scale;
+            if (p1FireTimer > 0)
+              panzer1Tex = settings.switchSides ? redTankFire : blueTankFire;
 
-          DrawTexturePro(panzer1Tex,
-                         {0, 0, flip * panzer1Tex.width, (float)panzer1Tex.height},
-                         {panzer1.getPanzerPosition().x, panzer1.getPanzerPosition().y + (panzerHeight - drawH) / 2.0f, drawW, drawH},
-                         {0, 0}, 0, WHITE);
+            float scale = panzerHeight / (float)panzer1Idle.height;
+            float drawW = panzer1Tex.width * scale;
+            float drawH = panzer1Tex.height * scale;
 
-          for (Vector2 bullet : panzer1.getPanzerBullets())
-          {
-            float bw = fireballRight.width * (bulletHeight / (float)fireballRight.height);
-            float bh = bulletHeight;
-            DrawTexturePro(fireballRight,
-                           {0, 0, (float)fireballRight.width, (float)fireballRight.height},
-                           {bullet.x - bw * 0.78f, bullet.y - bh / 2.0f, bw, bh},
+            DrawTexturePro(panzer1Tex,
+                           {0, 0, flip * panzer1Tex.width, (float)panzer1Tex.height},
+                           {panzer1.getPosition().x, panzer1.getPosition().y + (panzerHeight - drawH) / 2.0f, drawW, drawH},
                            {0, 0}, 0, WHITE);
-          }
-        }
 
-        // for panzer2
-        if (!panzer2.getIsPanzerHit())
-        {
-          Texture2D panzer2Tex = redTank;
-          Texture2D panzer2Idle = redTank;
-          float flip = -1.0f; // red faces right, flip to face left
-
-          if (settings.switchSides)
-          {
-            panzer2Tex = blueTank;
-            panzer2Idle = blueTank;
-            flip = 1.0f; // blue already faces left
+            for (Vector2 bullet : panzer1.getBullets())
+            {
+              float bw = fireballRight.width * (bulletHeight / (float)fireballRight.height);
+              float bh = bulletHeight;
+              DrawTexturePro(fireballRight,
+                             {0, 0, (float)fireballRight.width, (float)fireballRight.height},
+                             {bullet.x - bw * 0.78f, bullet.y - bh / 2.0f, bw, bh},
+                             {0, 0}, 0, WHITE);
+            }
           }
 
-          if (p2FireTimer > 0)
+          // panzer 2
+          if (!panzer2.getIsHit())
           {
+            Texture2D panzer2Tex = redTank;
+            Texture2D panzer2Idle = redTank;
+            float flip = -1.0f;
+
             if (settings.switchSides)
-              panzer2Tex = blueTankFire;
-            else
-              panzer2Tex = redTankFire;
-          }
+            {
+              panzer2Tex = blueTank;
+              panzer2Idle = blueTank;
+              flip = 1.0f;
+            }
 
-          float scale = panzerHeight / (float)panzer2Idle.height;
-          float drawW = panzer2Tex.width * scale;
-          float drawH = panzer2Tex.height * scale;
-          float drawX = panzer2.getPanzerPosition().x - (drawW - panzer2.getPanzerSize().x);
+            if (p2FireTimer > 0)
+              panzer2Tex = settings.switchSides ? blueTankFire : redTankFire;
 
-          DrawTexturePro(panzer2Tex,
-                         {0, 0, flip * panzer2Tex.width, (float)panzer2Tex.height},
-                         {drawX, panzer2.getPanzerPosition().y + (panzerHeight - drawH) / 2.0f, drawW, drawH},
-                         {0, 0}, 0, WHITE);
+            float scale = panzerHeight / (float)panzer2Idle.height;
+            float drawW = panzer2Tex.width * scale;
+            float drawH = panzer2Tex.height * scale;
+            float drawX = panzer2.getPosition().x - (drawW - panzer2.getSize().x);
 
-          for (Vector2 bullet : panzer2.getPanzerBullets())
-          {
-            float bw = fireballLeft.width * (bulletHeight / (float)fireballLeft.height);
-            float bh = bulletHeight;
-            DrawTexturePro(fireballLeft,
-                           {0, 0, (float)fireballLeft.width, (float)fireballLeft.height},
-                           {bullet.x - bw * 0.22f, bullet.y - bh / 2.0f, bw, bh},
+            DrawTexturePro(panzer2Tex,
+                           {0, 0, flip * panzer2Tex.width, (float)panzer2Tex.height},
+                           {drawX, panzer2.getPosition().y + (panzerHeight - drawH) / 2.0f, drawW, drawH},
                            {0, 0}, 0, WHITE);
+
+            for (Vector2 bullet : panzer2.getBullets())
+            {
+              float bw = fireballLeft.width * (bulletHeight / (float)fireballLeft.height);
+              float bh = bulletHeight;
+              DrawTexturePro(fireballLeft,
+                             {0, 0, (float)fireballLeft.width, (float)fireballLeft.height},
+                             {bullet.x - bw * 0.22f, bullet.y - bh / 2.0f, bw, bh},
+                             {0, 0}, 0, WHITE);
+            }
           }
-        }
         }
       }
     }
 
-    // game mode menu
-    if (gameModeMenuAction)
+    // game modes menu
+    if (inGameModes)
     {
-      DrawUiTitle("GAME MODES", 60.0f * uiScale, (int)(70 * uiScale));
+      Ui::drawTitle("GAME MODES", 60.0f * uiScale, (int)(70 * uiScale), screenWidth);
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - (int)(10 * uiScale));
 
       int boxWidth = (int)(450 * uiScale);
@@ -1107,14 +826,17 @@ int main()
       auto DrawRowLabel = [&](const char *text, float y)
       {
         int textW = MeasureText(text, settingsFontTextSize);
-        DrawText(text, screenWidth / 2 - (int)(20 * uiScale) - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, uiText);
+        DrawText(text, screenWidth / 2 - (int)(20 * uiScale) - textW,
+                 (int)(y + (boxHeight / 2) - (settingsFontTextSize / 2)), settingsFontTextSize, Ui::text);
       };
 
       float controlX = screenWidth / 2.0f + 20.0f * uiScale;
       float currentY = startY;
       bool guiHovered = false;
 
-      DrawUiPanel({screenWidth / 2.0f - 520.0f * uiScale, startY - 30.0f * uiScale, 1040.0f * uiScale, totalHeight + 60.0f * uiScale});
+      Ui::drawPanel({screenWidth / 2.0f - 520.0f * uiScale, startY - 30.0f * uiScale,
+                     1040.0f * uiScale, totalHeight + 60.0f * uiScale},
+                    uiScale);
 
       auto GuiHover = [&](Rectangle rec, int id)
       {
@@ -1131,8 +853,7 @@ int main()
       };
 
       DrawRowLabel("Game Mode:", currentY);
-      const char *currentModeText = (gameModeActive == 0) ? "Survival" : (gameModeActive == 1) ? "Deathmatch"
-                                                                                               : "Custom";
+      const char *currentModeText = (gameModeActive == 0) ? "Survival" : (gameModeActive == 1) ? "Deathmatch" : "Custom";
       Rectangle modeBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
       GuiHover(modeBtn, 1);
       if (GuiButton(modeBtn, currentModeText))
@@ -1146,8 +867,7 @@ int main()
       currentY += boxHeight + gapY;
 
       DrawRowLabel("Rounds:", currentY);
-      const char *currentRoundsText = (roundsActive == 0) ? "Best of 3" : (roundsActive == 1) ? "Best of 5"
-                                                                                              : "Best of 7";
+      const char *currentRoundsText = (roundsActive == 0) ? "Best of 3" : (roundsActive == 1) ? "Best of 5" : "Best of 7";
       Rectangle roundsBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
       GuiHover(roundsBtn, 2);
       if (GuiButton(roundsBtn, currentRoundsText))
@@ -1218,10 +938,12 @@ int main()
         auto DrawStaticRule = [&](const char *label, const char *value, float y)
         {
           DrawRowLabel(label, y);
-          DrawRectangle(controlX, y, boxWidth, boxHeight, uiBtn);
-          DrawRectangleLinesEx({controlX, y, (float)boxWidth, (float)boxHeight}, std::max(1.0f, 3.0f * uiScale), uiBorder);
+          DrawRectangle(controlX, y, boxWidth, boxHeight, Ui::btn);
+          DrawRectangleLinesEx({controlX, y, (float)boxWidth, (float)boxHeight},
+                               std::max(1.0f, 3.0f * uiScale), Ui::border);
           int valueFont = (int)(40 * uiScale);
-          DrawText(value, controlX + boxWidth / 2 - MeasureText(value, valueFont) / 2, y + (boxHeight / 2) - valueFont / 2, valueFont, uiMuted);
+          DrawText(value, (int)(controlX + boxWidth / 2 - MeasureText(value, valueFont) / 2),
+                   (int)(y + (boxHeight / 2) - valueFont / 2), valueFont, Ui::muted);
         };
 
         DrawStaticRule("Move Speed:", moveText, currentY);
@@ -1233,21 +955,14 @@ int main()
         DrawStaticRule("Ammunition:", ammoText, currentY);
       }
 
-      if (!guiHovered && settingsBackButtonState == 0)
+      if (!guiHovered && backBtn.state == 0)
         lastGuiHover = -1;
 
-      DrawUiButton(settingsBackButton, settingsBackButtonText, settingsBackButtonState, settingsBackButtonTextFontSize);
-
-      if (settingsBackButtonAction)
-      {
-        gameModeMenuAction = false;
-        settingsBackButtonAction = false;
-        lastGuiHover = -1;
-      }
+      backBtn.draw(uiScale);
     }
 
     // settings menu
-    if (settingsButtonAction)
+    if (inSettings)
     {
       if (!settingsMenuReady)
       {
@@ -1255,7 +970,7 @@ int main()
         settingsMenuReady = true;
       }
 
-      DrawUiTitle("SETTINGS", 60.0f * uiScale, (int)(70 * uiScale));
+      Ui::drawTitle("SETTINGS", 60.0f * uiScale, (int)(70 * uiScale), screenWidth);
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - (int)(10 * uiScale));
 
       int boxWidth = (int)(450 * uiScale);
@@ -1269,14 +984,17 @@ int main()
       auto DrawRowLabel = [&](const char *text, float y)
       {
         int textW = MeasureText(text, settingsFontTextSize);
-        DrawText(text, screenWidth / 2 - (int)(20 * uiScale) - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, uiText);
+        DrawText(text, screenWidth / 2 - (int)(20 * uiScale) - textW,
+                 (int)(y + (boxHeight / 2) - (settingsFontTextSize / 2)), settingsFontTextSize, Ui::text);
       };
 
       float controlX = screenWidth / 2.0f + 20.0f * uiScale;
       float currentY = startY;
       bool guiHovered = false;
 
-      DrawUiPanel({screenWidth / 2.0f - 520.0f * uiScale, startY - 30.0f * uiScale, 1040.0f * uiScale, totalHeight + 60.0f * uiScale});
+      Ui::drawPanel({screenWidth / 2.0f - 520.0f * uiScale, startY - 30.0f * uiScale,
+                     1040.0f * uiScale, totalHeight + 60.0f * uiScale},
+                    uiScale);
 
       auto GuiHover = [&](Rectangle rec, int id)
       {
@@ -1300,7 +1018,7 @@ int main()
         StopSound(clickSound);
         PlaySound(clickSound);
         soundActive++;
-        if (soundActive >= availableSounds.size())
+        if (soundActive >= (int)availableSounds.size())
           soundActive = 0;
       }
       currentY += boxHeight + gapY;
@@ -1320,8 +1038,7 @@ int main()
       currentY += boxHeight + gapY;
 
       int previousScreenActive = screenActive;
-      const char *currentScreenText = (screenActive == 0) ? "Windowed" : (screenActive == 1) ? "Borderless Window"
-                                                                                             : "Fullscreen";
+      const char *currentScreenText = (screenActive == 0) ? "Windowed" : (screenActive == 1) ? "Borderless Window" : "Fullscreen";
 
       DrawRowLabel("Screen:", currentY);
       Rectangle screenBtn = {controlX, currentY, (float)boxWidth, (float)boxHeight};
@@ -1347,7 +1064,7 @@ int main()
         StopSound(clickSound);
         PlaySound(clickSound);
         backgroundActive++;
-        if (backgroundActive >= availableBackgrounds.size())
+        if (backgroundActive >= (int)availableBackgrounds.size())
           backgroundActive = 0;
       }
       currentY += boxHeight + gapY;
@@ -1366,15 +1083,14 @@ int main()
           resolutionActive = 0;
       }
 
-      if (!guiHovered && settingsBackButtonState == 0)
+      if (!guiHovered && backBtn.state == 0)
         lastGuiHover = -1;
 
       if (resolutionActive != previousResolutionActive)
       {
         settings.resolution = resolutions[resolutionActive];
-        resolution = settingsGetScreenWidth(settings);
+        resolution = parseResolution(settings);
 
-        // resolution only applies in windowed mode
         if (screenActive == 0)
         {
           SetWindowSize(resolution.x, resolution.y);
@@ -1383,75 +1099,31 @@ int main()
         }
       }
 
-      // back button
-      DrawUiButton(settingsBackButton, settingsBackButtonText, settingsBackButtonState, settingsBackButtonTextFontSize);
-
-      if (settingsBackButtonAction)
-      {
-        settings.shootingSound = "../resources/" + availableSounds[soundActive];
-        settings.resolution = resolutions[resolutionActive];
-
-        std::string bgToSave = availableBackgrounds[backgroundActive];
-        if (bgToSave.find('.') != std::string::npos)
-        {
-          settings.background = "../resources/" + bgToSave;
-        }
-        else
-        {
-          settings.background = bgToSave;
-        }
-
-        settings.switchSides = (std::string(switchSidesInput) == "YES");
-
-        if (screenActive == 0)
-          settings.screen = Windowed;
-        else if (screenActive == 1)
-          settings.screen = BorderlessWindow;
-        else if (screenActive == 2)
-          settings.screen = Fullscreen;
-
-        changeSettings(settings);
-
-        UnloadSound(currentShootSound);
-        currentShootSound = LoadSound(settings.shootingSound.c_str());
-
-        LoadNewBackground(settings.background);
-
-        settingsButtonAction = false;
-        settingsBackButtonAction = false;
-        lastGuiHover = -1;
-      }
-
+      backBtn.draw(uiScale);
       GuiUnlock();
     }
 
     // tutorial menu
-    if (tutorialButtonAction)
+    if (inTutorial)
     {
-      DrawUiTitle("HOW TO PLAY", 60.0f * uiScale, (int)(70 * uiScale));
+      Ui::drawTitle("HOW TO PLAY", 60.0f * uiScale, (int)(70 * uiScale), screenWidth);
 
-      DrawUiPanel({80.0f * uiScale, 180.0f * uiScale, screenWidth / 2.0f - 120.0f * uiScale, 340.0f * uiScale});
-      DrawUiPanel({screenWidth / 2.0f + 40.0f * uiScale, 180.0f * uiScale, screenWidth / 2.0f - 120.0f * uiScale, 340.0f * uiScale});
+      Ui::drawPanel({80.0f * uiScale, 180.0f * uiScale, screenWidth / 2.0f - 120.0f * uiScale, 340.0f * uiScale}, uiScale);
+      Ui::drawPanel({screenWidth / 2.0f + 40.0f * uiScale, 180.0f * uiScale, screenWidth / 2.0f - 120.0f * uiScale, 340.0f * uiScale}, uiScale);
 
       int titleFont = (int)(50 * uiScale);
       int bodyFont = (int)(36 * uiScale);
       DrawText("PLAYER 1", (int)(120 * uiScale), (int)(210 * uiScale), titleFont, BLUE);
-      DrawText("W - Move Up", (int)(120 * uiScale), (int)(290 * uiScale), bodyFont, uiText);
-      DrawText("S - Move Down", (int)(120 * uiScale), (int)(350 * uiScale), bodyFont, uiText);
-      DrawText("D - Shoot", (int)(120 * uiScale), (int)(410 * uiScale), bodyFont, uiText);
+      DrawText("W - Move Up", (int)(120 * uiScale), (int)(290 * uiScale), bodyFont, Ui::text);
+      DrawText("S - Move Down", (int)(120 * uiScale), (int)(350 * uiScale), bodyFont, Ui::text);
+      DrawText("D - Shoot", (int)(120 * uiScale), (int)(410 * uiScale), bodyFont, Ui::text);
 
       DrawText("PLAYER 2", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(210 * uiScale), titleFont, RED);
-      DrawText("UP Arrow - Move Up", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(290 * uiScale), bodyFont, uiText);
-      DrawText("DOWN Arrow - Move Down", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(350 * uiScale), bodyFont, uiText);
-      DrawText("LEFT Arrow - Shoot", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(410 * uiScale), bodyFont, uiText);
+      DrawText("UP Arrow - Move Up", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(290 * uiScale), bodyFont, Ui::text);
+      DrawText("DOWN Arrow - Move Down", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(350 * uiScale), bodyFont, Ui::text);
+      DrawText("LEFT Arrow - Shoot", (int)(screenWidth / 2.0f + 80 * uiScale), (int)(410 * uiScale), bodyFont, Ui::text);
 
-      DrawUiButton(settingsBackButton, settingsBackButtonText, settingsBackButtonState, settingsBackButtonTextFontSize);
-
-      if (settingsBackButtonAction)
-      {
-        tutorialButtonAction = false;
-        settingsBackButtonAction = false;
-      }
+      backBtn.draw(uiScale);
     }
 
     EndDrawing();

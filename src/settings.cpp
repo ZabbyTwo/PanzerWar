@@ -1,181 +1,132 @@
-#include <iostream>
-#include <string>
-#include <fstream>
+#include "settings.hpp"
+
 #include <filesystem>
-#include "settings.h"
+#include <fstream>
+#include <iostream>
 
 Settings loadSettings()
 {
-    std::string row;
     Settings loaded;
-    std::ifstream settingsFile("../resources/settings.txt");
+    std::ifstream file("../resources/settings.txt");
+    std::string row;
 
-    while (getline(settingsFile, row))
+    while (std::getline(file, row))
     {
-        int pos = row.find('=');
+        auto pos = row.find('=');
+        if (pos == std::string::npos)
+            continue;
+
         std::string key = row.substr(0, pos);
         std::string value = row.substr(pos + 1);
 
-        // general settings
         if (key == "shootingSound")
-        {
             loaded.shootingSound = value;
-        }
-
-        if (key == "switchSides")
-        {
-            loaded.switchSides = value == "YES" ? true : false;
-        }
-
-        if (key == "screen")
+        else if (key == "switchSides")
+            loaded.switchSides = (value == "YES");
+        else if (key == "screen")
         {
             if (value == "Windowed")
-            {
-                loaded.screen = Windowed;
-            }
-            else if (value == "BorderlessWindow")
-            {
-                loaded.screen = BorderlessWindow;
-            }
+                loaded.screen = ScreenMode::Windowed;
+            else if (value == "BorderlessWindow" || value == "Borderless Window")
+                loaded.screen = ScreenMode::Borderless;
             else if (value == "Fullscreen")
-            {
-                loaded.screen = Fullscreen;
-            }
+                loaded.screen = ScreenMode::Fullscreen;
         }
-
-        if (key == "resolution")
-        {
+        else if (key == "resolution")
             loaded.resolution = value;
-        }
-
-        if (key == "background")
-        {
+        else if (key == "background")
             loaded.background = value;
-        }
     }
 
     return loaded;
 }
 
-void printSettings(Settings &settings)
+void printSettings(const Settings &settings)
 {
-    std::cout << "Settings" << "\n";
-    std::cout << "\n";
-    std::cout << "Shooting Sound=" << settings.shootingSound << "\n";
-    std::cout << "Switch Sides=" << settings.switchSides << "\n";
-    std::cout << "Screen=" << settings.screen << "\n";
-    std::cout << "Resolution=" << settings.resolution << "\n";
-    std::cout << "Background=" << settings.background << "\n";
+    std::cout << "Settings\n\n";
+    std::cout << "Shooting Sound=" << settings.shootingSound << '\n';
+    std::cout << "Switch Sides=" << (settings.switchSides ? "YES" : "NO") << '\n';
+    std::cout << "Screen=" << (int)settings.screen << '\n';
+    std::cout << "Resolution=" << settings.resolution << '\n';
+    std::cout << "Background=" << settings.background << '\n';
 }
 
-Resolution settingsGetScreenWidth(Settings &settings)
+Resolution parseResolution(const Settings &settings)
 {
     if (settings.resolution.empty())
-    {
         return {0, 0};
-    }
 
-    int pos = settings.resolution.find('x');
-
+    auto pos = settings.resolution.find('x');
     if (pos == std::string::npos)
-    {
         return {0, 0};
-    }
 
-    int x = std::stoi(settings.resolution.substr(0, pos));
-    int y = std::stoi(settings.resolution.substr(pos + 1));
-    return {x, y};
+    return {
+        std::stoi(settings.resolution.substr(0, pos)),
+        std::stoi(settings.resolution.substr(pos + 1))};
 }
 
-void changeSettings(Settings &Settings)
+void saveSettings(const Settings &settings)
 {
-    // clears the complete settings file so it can be rewritten
-    std::ofstream clearSettings;
-    clearSettings.open("../resources/settings.txt", std::ofstream::out | std::ofstream::trunc);
-    clearSettings.close();
+    std::ofstream file("../resources/settings.txt", std::ofstream::out | std::ofstream::trunc);
 
-    std::ofstream writeIn{"../resources/settings.txt"};
+    file << "shootingSound=" << settings.shootingSound << '\n';
+    file << "switchSides=" << (settings.switchSides ? "YES" : "NO") << '\n';
 
-    writeIn << "shootingSound=" << Settings.shootingSound << '\n';
-    writeIn << "switchSides=" << (Settings.switchSides ? "YES" : "NO") << '\n';
+    if (settings.screen == ScreenMode::Windowed)
+        file << "screen=Windowed\n";
+    else if (settings.screen == ScreenMode::Borderless)
+        file << "screen=BorderlessWindow\n";
+    else
+        file << "screen=Fullscreen\n";
 
-    if (Settings.screen == Windowed)
-        writeIn << "screen=" << "Windowed" << '\n';
-    else if (Settings.screen == BorderlessWindow)
-        writeIn << "screen=" << "Borderless Window" << '\n';
-    else if (Settings.screen == Fullscreen)
-        writeIn << "screen=" << "Fullscreen" << '\n';
-
-    writeIn << "resolution=" << Settings.resolution << '\n';
-    writeIn << "background=" << Settings.background << '\n';
+    file << "resolution=" << settings.resolution << '\n';
+    file << "background=" << settings.background << '\n';
 }
 
 void initSettings()
 {
-    std::ofstream writeIn{"../resources/settings.txt"};
-
-    writeIn << "shootingSound=" << "../resources/shoot.mp3" << '\n';
-    writeIn << "switchSides=" << "NO" << '\n';
-    writeIn << "screen=" << "Windowed" << '\n';
-    writeIn << "resolution=" << "1920x1080" << '\n';
-    writeIn << "background=" << "../resources/default.png" << '\n';
+    Settings defaults;
+    defaults.shootingSound = "../resources/9mm.mp3";
+    defaults.switchSides = false;
+    defaults.screen = ScreenMode::Windowed;
+    defaults.resolution = "1920x1080";
+    defaults.background = "BLACK";
+    saveSettings(defaults);
 }
 
 std::vector<std::string> getAvailableSounds()
 {
-    std::vector<std::string> availableSounds;
+    std::vector<std::string> sounds;
+
     for (const auto &entry : std::filesystem::directory_iterator("../resources/"))
     {
-        if (entry.is_regular_file())
-        {
-            std::string ext = entry.path().extension().string();
-            if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
-            {
-                availableSounds.push_back(entry.path().filename().string());
-            }
-        }
+        if (!entry.is_regular_file())
+            continue;
+
+        std::string ext = entry.path().extension().string();
+        if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
+            sounds.push_back(entry.path().filename().string());
     }
 
-    return availableSounds;
+    return sounds;
 }
 
 std::vector<std::string> getAvailableBackgrounds()
 {
-    std::vector<std::string> availableBackgrounds;
-
-    availableBackgrounds.push_back("BLACK");
-    availableBackgrounds.push_back("WHITE");
-    availableBackgrounds.push_back("GRAY");
-    availableBackgrounds.push_back("LIGHTGRAY");
-    availableBackgrounds.push_back("YELLOW");
-    availableBackgrounds.push_back("GOLD");
-    availableBackgrounds.push_back("ORANGE");
-    availableBackgrounds.push_back("PINK");
-    availableBackgrounds.push_back("MAROON");
-    availableBackgrounds.push_back("GREEN");
-    availableBackgrounds.push_back("LIME");
-    availableBackgrounds.push_back("DARKGREEN");
-    availableBackgrounds.push_back("SKYBLUE");
-    availableBackgrounds.push_back("DARKBLUE");
-    availableBackgrounds.push_back("PURPLE");
-    availableBackgrounds.push_back("VIOLET");
-    availableBackgrounds.push_back("DARKPURPLE");
-    availableBackgrounds.push_back("BEIGE");
-    availableBackgrounds.push_back("BROWN");
-    availableBackgrounds.push_back("DARKBROWN");
-    availableBackgrounds.push_back("MAGENTA");
+    std::vector<std::string> backgrounds = {
+        "BLACK", "WHITE", "GRAY", "LIGHTGRAY", "YELLOW", "GOLD", "ORANGE", "PINK",
+        "MAROON", "GREEN", "LIME", "DARKGREEN", "SKYBLUE", "DARKBLUE", "PURPLE",
+        "VIOLET", "DARKPURPLE", "BEIGE", "BROWN", "DARKBROWN", "MAGENTA"};
 
     for (const auto &entry : std::filesystem::directory_iterator("../resources/"))
     {
-        if (entry.is_regular_file())
-        {
-            std::string ext = entry.path().extension().string();
-            if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
-            {
-                availableBackgrounds.push_back(entry.path().filename().string());
-            }
-        }
+        if (!entry.is_regular_file())
+            continue;
+
+        std::string ext = entry.path().extension().string();
+        if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
+            backgrounds.push_back(entry.path().filename().string());
     }
 
-    return availableBackgrounds;
+    return backgrounds;
 }

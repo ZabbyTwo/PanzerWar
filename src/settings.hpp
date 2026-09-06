@@ -3,17 +3,17 @@
 #include <string>
 #include <vector>
 
-enum Screen
+enum class ScreenMode
 {
     Windowed,
-    BorderlessWindow,
+    Borderless,
     Fullscreen
 };
 
 struct Resolution
 {
-    int x;
-    int y;
+    int x{0};
+    int y{0};
 
     bool isEmpty() const
     {
@@ -23,24 +23,17 @@ struct Resolution
 
 struct Settings
 {
-    // general settings
     std::string shootingSound;
-    bool switchSides;
-    Screen screen;
+    bool switchSides{false};
+    ScreenMode screen{ScreenMode::Windowed};
     std::string resolution;
     std::string background;
 };
 
 Settings loadSettings();
-
-void printSettings(Settings &settings);
-
-Resolution settingsGetScreenWidth(Settings &settings);
-
-void changeSettings(Settings &Settings);
-
+void printSettings(const Settings &settings);
+Resolution parseResolution(const Settings &settings);
+void saveSettings(const Settings &settings);
 void initSettings();
-
 std::vector<std::string> getAvailableSounds();
-
 std::vector<std::string> getAvailableBackgrounds();
