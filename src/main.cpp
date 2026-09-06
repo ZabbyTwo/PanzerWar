@@ -865,6 +865,11 @@ int main()
       DrawUiButton(settingsButton, "SETTINGS", settingsButtonState, menuTextFontSize);
       DrawUiButton(tutorialButton, "HOW TO PLAY", tutorialButtonState, menuTextFontSize);
       DrawUiButton(quitButton, "QUIT", quitButtonState, menuTextFontSize);
+
+      const char *credit = "made by Luis Zabransky";
+      int creditFont = (int)(28 * uiScale);
+      DrawText(credit, screenWidth / 2 - MeasureText(credit, creditFont) / 2,
+               screenHeight - (int)(50 * uiScale), creditFont, uiMuted);
     }
 
     if (startButtonAction)
