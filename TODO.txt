@@ -39,6 +39,8 @@
     +panzers
     +rounds
 
+-bugfix: when i press on settings btn i accidentally click on the screen mode as well
+
 -make btns cooler
     -when hover do sth
 

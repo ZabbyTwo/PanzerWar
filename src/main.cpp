@@ -183,6 +183,7 @@ int main()
 
   bool settingsButtonAction{false};
   int settingsButtonState{0};
+  bool settingsMenuReady{true};
 
   bool tutorialButtonAction{false};
   int tutorialButtonState{0};
@@ -410,6 +411,7 @@ int main()
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
           settingsButtonAction = true;
+          settingsMenuReady = false;
         }
       }
       else
@@ -907,6 +909,12 @@ int main()
     // settings menu
     if (settingsButtonAction)
     {
+      if (!settingsMenuReady)
+      {
+        GuiLock();
+        settingsMenuReady = true;
+      }
+
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
 
       int boxWidth = 450;
@@ -1073,6 +1081,8 @@ int main()
         settingsButtonAction = false;
         settingsBackButtonAction = false;
       }
+
+      GuiUnlock();
     }
 
     // tutorial menu
