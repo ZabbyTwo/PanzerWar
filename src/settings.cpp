@@ -131,10 +131,7 @@ std::vector<std::string> getAvailableSounds()
             std::string ext = entry.path().extension().string();
             if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
             {
-                std::string name = entry.path().filename().string();
-                if (name == "click.wav" || name == "hover.wav")
-                    continue;
-                availableSounds.push_back(name);
+                availableSounds.push_back(entry.path().filename().string());
             }
         }
     }
@@ -175,10 +172,7 @@ std::vector<std::string> getAvailableBackgrounds()
             std::string ext = entry.path().extension().string();
             if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
             {
-                std::string name = entry.path().filename().string();
-                if (name.find("tank") != std::string::npos || name.find("fireball") != std::string::npos)
-                    continue;
-                availableBackgrounds.push_back(name);
+                availableBackgrounds.push_back(entry.path().filename().string());
             }
         }
     }

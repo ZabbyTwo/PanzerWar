@@ -45,12 +45,17 @@
     +button clicks/hovers
     +make sound when i change value of game mode, settings etc. the same as click 
 
--make ui better all look the same, one design etc. not so weird/random
++when hover/click buttons light up or some reaction
+
++make whole ui better all look the same, one design etc. not so weird/random
+
++fixed hierarchy 
+
+-fix scaling when resolution changes, so everything always stays at the same position etc.
 
 -cleanup code
     -buttons in classes and button logics
     -optimize it
 
--fix scaling when resolution changes
 
 -add cmake

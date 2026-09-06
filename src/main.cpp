@@ -26,6 +26,7 @@ int main()
   int screenWidth{resolution.x};
   int screenHeight{resolution.y};
   const int placeToBorder{30};
+  const int hudBarHeight{90};
 
   // Window Settings
 
@@ -44,9 +45,42 @@ int main()
   SetTargetFPS(60);
 
   Sound currentShootSound = LoadSound(settings.shootingSound.c_str());
-  Sound hoverSound = LoadSound("../resources/hover.wav");
-  Sound clickSound = LoadSound("../resources/click.wav");
+  Sound hoverSound = LoadSound("../resources/ui/hover.wav");
+  Sound clickSound = LoadSound("../resources/ui/click.wav");
   int lastGuiHover = -1;
+
+  // shared UI look
+  Color uiBg = {22, 24, 28, 255};
+  Color uiPanel = {36, 40, 48, 255};
+  Color uiBtn = {58, 66, 78, 255};
+  Color uiBtnHover = {100, 115, 135, 255};
+  Color uiBtnPress = {38, 44, 52, 255};
+  Color uiBorder = {72, 80, 92, 255};
+  Color uiAccent = {212, 168, 70, 255};
+  Color uiText = {230, 230, 230, 255};
+  Color uiMuted = {155, 160, 170, 255};
+
+  GuiSetStyle(BUTTON, BORDER_WIDTH, 3);
+  GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(uiBtn));
+  GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(uiBtnHover));
+  GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt(uiBtnPress));
+  GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt(uiBorder));
+  GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt(uiAccent));
+  GuiSetStyle(BUTTON, BORDER_COLOR_PRESSED, ColorToInt(uiAccent));
+  GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(uiText));
+  GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
+  GuiSetStyle(BUTTON, TEXT_COLOR_PRESSED, ColorToInt(uiMuted));
+
+  GuiSetStyle(SLIDER, BORDER_WIDTH, 3);
+  GuiSetStyle(SLIDER, BASE_COLOR_NORMAL, ColorToInt(uiBtn));
+  GuiSetStyle(SLIDER, BASE_COLOR_FOCUSED, ColorToInt(uiBtnHover));
+  GuiSetStyle(SLIDER, BASE_COLOR_PRESSED, ColorToInt(uiAccent));
+  GuiSetStyle(SLIDER, BORDER_COLOR_NORMAL, ColorToInt(uiBorder));
+  GuiSetStyle(SLIDER, BORDER_COLOR_FOCUSED, ColorToInt(uiAccent));
+  GuiSetStyle(SLIDER, BORDER_COLOR_PRESSED, ColorToInt(uiAccent));
+  GuiSetStyle(SLIDER, TEXT_COLOR_NORMAL, ColorToInt(uiText));
+  GuiSetStyle(SLIDER, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
+  GuiSetStyle(SLIDER, TEXT_COLOR_PRESSED, ColorToInt(WHITE));
 
   // load sprite and crop empty space
   auto LoadSprite = [](const char *path, Rectangle crop) -> Texture2D
@@ -58,12 +92,12 @@ int main()
     return tex;
   };
 
-  Texture2D blueTank = LoadSprite("../resources/bluetank.png", {336, 736, 1328, 528});
-  Texture2D blueTankFire = LoadSprite("../resources/bluetankfire.png", {8, 736, 1656, 528});
-  Texture2D redTank = LoadSprite("../resources/redtank.png", {336, 736, 1328, 528});
-  Texture2D redTankFire = LoadSprite("../resources/redtankfire.png", {352, 736, 1640, 528});
-  Texture2D fireballLeft = LoadSprite("../resources/fireball-goingleft.png", {88, 472, 1792, 968});
-  Texture2D fireballRight = LoadSprite("../resources/fireball-goingright.png", {80, 480, 1792, 960});
+  Texture2D blueTank = LoadSprite("../resources/sprites/bluetank.png", {336, 736, 1328, 528});
+  Texture2D blueTankFire = LoadSprite("../resources/sprites/bluetankfire.png", {8, 736, 1656, 528});
+  Texture2D redTank = LoadSprite("../resources/sprites/redtank.png", {336, 736, 1328, 528});
+  Texture2D redTankFire = LoadSprite("../resources/sprites/redtankfire.png", {352, 736, 1640, 528});
+  Texture2D fireballLeft = LoadSprite("../resources/sprites/fireball-goingleft.png", {88, 472, 1792, 968});
+  Texture2D fireballRight = LoadSprite("../resources/sprites/fireball-goingright.png", {80, 480, 1792, 960});
 
   const float panzerHeight = 160.0f;
   const float panzerWidth = panzerHeight * ((float)redTank.width / (float)redTank.height);
@@ -579,7 +613,7 @@ int main()
         {
           if (IsKeyDown(KEY_W))
           {
-            if (panzer1.getPanzerPosition().y > placeToBorder)
+            if (panzer1.getPanzerPosition().y > hudBarHeight + placeToBorder)
               panzer1.changePanzerPositionY('-');
           }
           if (IsKeyDown(KEY_S))
@@ -590,7 +624,7 @@ int main()
           if (IsKeyPressed(KEY_D) && p1ReloadTimer <= 0.0f && p1Ammo != 0)
           {
             panzer1.addPanzerBullets({panzer1.getPanzerPosition().x + panzer1.getPanzerSize().x,
-                                      panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2});
+                                      panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2 - 35});
 
             if (p1Ammo > 0)
               p1Ammo--;
@@ -620,7 +654,7 @@ int main()
         {
           if (IsKeyDown(KEY_UP))
           {
-            if (panzer2.getPanzerPosition().y > placeToBorder)
+            if (panzer2.getPanzerPosition().y > hudBarHeight + placeToBorder)
               panzer2.changePanzerPositionY('-');
           }
           if (IsKeyDown(KEY_DOWN))
@@ -631,7 +665,7 @@ int main()
           if (IsKeyPressed(KEY_LEFT) && p2ReloadTimer <= 0.0f && p2Ammo != 0)
           {
             panzer2.addPanzerBullets({panzer2.getPanzerPosition().x,
-                                      panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2});
+                                      panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2 - 35});
 
             if (p2Ammo > 0)
               p2Ammo--;
@@ -674,6 +708,39 @@ int main()
 
     BeginDrawing();
 
+    auto DrawUiButton = [&](Rectangle rec, const char *text, int state, int fontSize)
+    {
+      Color fill = uiBtn;
+      Color border = uiBorder;
+      if (state == 1)
+      {
+        fill = uiBtnHover;
+        border = uiAccent;
+      }
+      else if (state == 2)
+      {
+        fill = uiBtnPress;
+        border = uiAccent;
+      }
+
+      DrawRectangleRec(rec, fill);
+      DrawRectangleLinesEx(rec, 3.0f, border);
+      int tw = MeasureText(text, fontSize);
+      DrawText(text, rec.x + (rec.width - tw) / 2.0f, rec.y + (rec.height - fontSize) / 2.0f, fontSize, uiText);
+    };
+
+    auto DrawUiTitle = [&](const char *text, float y, int fontSize)
+    {
+      int tw = MeasureText(text, fontSize);
+      DrawText(text, screenWidth / 2 - tw / 2, y, fontSize, uiAccent);
+    };
+
+    auto DrawUiPanel = [&](Rectangle rec)
+    {
+      DrawRectangleRec(rec, uiPanel);
+      DrawRectangleLinesEx(rec, 2.0f, uiBorder);
+    };
+
     if (startButtonAction)
     {
       if (useBgTexture)
@@ -690,46 +757,39 @@ int main()
     }
     else
     {
-      ClearBackground(BLACK);
+      ClearBackground(uiBg);
     }
-
-    auto DrawCenteredTextInRec = [&](Rectangle rec, const char *text, Color color)
-    {
-      int tw = MeasureText(text, menuTextFontSize);
-      DrawText(text, rec.x + (rec.width - tw) / 2, rec.y + (rec.height - menuTextFontSize) / 2, menuTextFontSize, color);
-    };
 
     if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction && !gameModeMenuAction && !matchOver)
     {
-      DrawRectangleRec(startButton, GREEN);
-      DrawCenteredTextInRec(startButton, "PLAY", BLACK);
+      DrawUiTitle("PANZER WAR", 80, 90);
 
-      DrawRectangleRec(gameModeButton, ORANGE);
-      DrawCenteredTextInRec(gameModeButton, "GAME MODES", BLACK);
+      float panelPad = 35.0f;
+      DrawUiPanel({startButton.x - panelPad, startButton.y - panelPad,
+                   startButton.width + panelPad * 2.0f, totalMenuHeight + panelPad * 2.0f});
 
-      DrawRectangleRec(settingsButton, YELLOW);
-      DrawCenteredTextInRec(settingsButton, "SETTINGS", BLACK);
-
-      DrawRectangleRec(tutorialButton, SKYBLUE);
-      DrawCenteredTextInRec(tutorialButton, "HOW TO PLAY", BLACK);
-
-      DrawRectangleRec(quitButton, RED);
-      DrawCenteredTextInRec(quitButton, "QUIT", BLACK);
+      DrawUiButton(startButton, "PLAY", startButtonState, menuTextFontSize);
+      DrawUiButton(gameModeButton, "GAME MODES", gameModeMenuState, menuTextFontSize);
+      DrawUiButton(settingsButton, "SETTINGS", settingsButtonState, menuTextFontSize);
+      DrawUiButton(tutorialButton, "HOW TO PLAY", tutorialButtonState, menuTextFontSize);
+      DrawUiButton(quitButton, "QUIT", quitButtonState, menuTextFontSize);
     }
 
     if (startButtonAction)
     {
       if (matchOver)
       {
-        const char *winText = (scoreP1 > scoreP2) ? "PLAYER 1 WINS THE MATCH!" : "PLAYER 2 WINS THE MATCH!";
-        DrawText(winText, screenWidth / 2 - MeasureText(winText, 80) / 2, screenHeight / 2 - 100, 80, GOLD);
+        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(uiBg, 0.7f));
+        DrawUiTitle((scoreP1 > scoreP2) ? "PLAYER 1 WINS THE MATCH!" : "PLAYER 2 WINS THE MATCH!",
+                    screenHeight / 2.0f - 120, 70);
 
         Rectangle menuBtn = {screenWidth / 2.0f - buttonWidth / 2.0f, (float)(screenHeight / 2 + 50), (float)buttonWidth, (float)buttonHeight};
-        DrawRectangleRec(menuBtn, GRAY);
-        DrawCenteredTextInRec(menuBtn, "MAIN MENU", BLACK);
+        int matchBtnState = 0;
 
         if (CheckCollisionPointRec(mousePoint, menuBtn))
         {
+          matchBtnState = IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? 2 : 1;
+
           if (lastGuiHover != 100)
           {
             lastGuiHover = 100;
@@ -760,35 +820,43 @@ int main()
         {
           lastGuiHover = -1;
         }
-      }
-      else if (countdownStart)
-      {
-        const char *text = TextFormat("%d", countdownStartTime);
-        DrawText(text, screenWidth / 2, screenHeight / 2, 120, DARKGRAY);
+
+        DrawUiButton(menuBtn, "MAIN MENU", matchBtnState, menuTextFontSize);
       }
       else
       {
+        // HUD bar (not part of playfield)
+        DrawRectangle(0, 0, screenWidth, hudBarHeight, uiPanel);
+        DrawRectangle(0, hudBarHeight - 3, screenWidth, 3, uiAccent);
+
         const char *p1AmmoStr = (p1Ammo < 0) ? "INF" : TextFormat("%d", p1Ammo);
         const char *p2AmmoStr = (p2Ammo < 0) ? "INF" : TextFormat("%d", p2Ammo);
 
-        // P1 Top Center position
-        const char *p1Text = TextFormat("P1 SCORE: %d     AMMO: %s", scoreP1, p1AmmoStr);
-        int p1Width = MeasureText(p1Text, 40);
-        DrawText(p1Text, screenWidth / 2 - p1Width / 2, 30, 40, settings.switchSides ? RED : BLUE);
+        const char *p1Text = TextFormat("P1  SCORE: %d   AMMO: %s", scoreP1, p1AmmoStr);
+        const char *p2Text = TextFormat("P2  SCORE: %d   AMMO: %s", scoreP2, p2AmmoStr);
+        Color p1Color = settings.switchSides ? RED : BLUE;
+        Color p2Color = settings.switchSides ? BLUE : RED;
+
+        DrawText(p1Text, 30, 28, 36, p1Color);
         if (p1ReloadTimer > 0)
-          DrawText("RELOADING", screenWidth / 2 - MeasureText("RELOADING", 20) / 2, 75, 20, YELLOW);
+          DrawText("RELOADING", 30, 62, 20, uiAccent);
 
-        // P2 Bottom Center position
-        const char *p2Text = TextFormat("P2 SCORE: %d     AMMO: %s", scoreP2, p2AmmoStr);
-        int p2Width = MeasureText(p2Text, 40);
-        DrawText(p2Text, screenWidth / 2 - p2Width / 2, screenHeight - 90, 40, settings.switchSides ? BLUE : RED);
+        int p2Width = MeasureText(p2Text, 36);
+        DrawText(p2Text, screenWidth - p2Width - 30, 28, 36, p2Color);
         if (p2ReloadTimer > 0)
-          DrawText("RELOADING", screenWidth / 2 - MeasureText("RELOADING", 20) / 2, screenHeight - 45, 20, YELLOW);
+          DrawText("RELOADING", screenWidth - MeasureText("RELOADING", 20) - 30, 62, 20, uiAccent);
 
+        if (countdownStart)
+        {
+          const char *text = TextFormat("%d", countdownStartTime);
+          DrawText(text, screenWidth / 2 - MeasureText(text, 120) / 2, screenHeight / 2 - 60, 120, uiAccent);
+        }
+        else
+        {
         if (roundOver)
         {
           const char *rwText = panzer2.getIsPanzerHit() ? "PLAYER 1 WINS ROUND!" : "PLAYER 2 WINS ROUND!";
-          DrawText(rwText, screenWidth / 2 - MeasureText(rwText, 60) / 2, screenHeight / 2 - 30, 60, GOLD);
+          DrawText(rwText, screenWidth / 2 - MeasureText(rwText, 60) / 2, screenHeight / 2 - 30, 60, uiAccent);
         }
 
         // for panzer1
@@ -875,12 +943,14 @@ int main()
                            {0, 0}, 0, WHITE);
           }
         }
+        }
       }
     }
 
     // game mode menu
     if (gameModeMenuAction)
     {
+      DrawUiTitle("GAME MODES", 60, 70);
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
 
       int boxWidth = 450;
@@ -894,12 +964,14 @@ int main()
       auto DrawRowLabel = [&](const char *text, float y)
       {
         int textW = MeasureText(text, settingsFontTextSize);
-        DrawText(text, screenWidth / 2 - 20 - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, WHITE);
+        DrawText(text, screenWidth / 2 - 20 - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, uiText);
       };
 
       float controlX = screenWidth / 2.0f + 20.0f;
       float currentY = startY;
       bool guiHovered = false;
+
+      DrawUiPanel({screenWidth / 2.0f - 520.0f, startY - 30.0f, 1040.0f, totalHeight + 60.0f});
 
       auto GuiHover = [&](Rectangle rec, int id)
       {
@@ -1003,9 +1075,9 @@ int main()
         auto DrawStaticRule = [&](const char *label, const char *value, float y)
         {
           DrawRowLabel(label, y);
-          DrawRectangle(controlX, y, boxWidth, boxHeight, Fade(GRAY, 0.5f));
-          DrawRectangleLines(controlX, y, boxWidth, boxHeight, Fade(DARKGRAY, 0.5f));
-          DrawText(value, controlX + boxWidth / 2 - MeasureText(value, 40) / 2, y + (boxHeight / 2) - 20, 40, LIGHTGRAY);
+          DrawRectangle(controlX, y, boxWidth, boxHeight, uiBtn);
+          DrawRectangleLinesEx({controlX, y, (float)boxWidth, (float)boxHeight}, 3.0f, uiBorder);
+          DrawText(value, controlX + boxWidth / 2 - MeasureText(value, 40) / 2, y + (boxHeight / 2) - 20, 40, uiMuted);
         };
 
         DrawStaticRule("Move Speed:", moveText, currentY);
@@ -1020,8 +1092,7 @@ int main()
       if (!guiHovered && settingsBackButtonState == 0)
         lastGuiHover = -1;
 
-      DrawRectangleRec(settingsBackButton, GRAY);
-      DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
+      DrawUiButton(settingsBackButton, settingsBackButtonText, settingsBackButtonState, settingsBackButtonTextFontSize);
 
       if (settingsBackButtonAction)
       {
@@ -1040,6 +1111,7 @@ int main()
         settingsMenuReady = true;
       }
 
+      DrawUiTitle("SETTINGS", 60, 70);
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
 
       int boxWidth = 450;
@@ -1053,12 +1125,14 @@ int main()
       auto DrawRowLabel = [&](const char *text, float y)
       {
         int textW = MeasureText(text, settingsFontTextSize);
-        DrawText(text, screenWidth / 2 - 20 - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, WHITE);
+        DrawText(text, screenWidth / 2 - 20 - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, uiText);
       };
 
       float controlX = screenWidth / 2.0f + 20.0f;
       float currentY = startY;
       bool guiHovered = false;
+
+      DrawUiPanel({screenWidth / 2.0f - 520.0f, startY - 30.0f, 1040.0f, totalHeight + 60.0f});
 
       auto GuiHover = [&](Rectangle rec, int id)
       {
@@ -1200,8 +1274,7 @@ int main()
       }
 
       // back button
-      DrawRectangleRec(settingsBackButton, GRAY);
-      DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
+      DrawUiButton(settingsBackButton, settingsBackButtonText, settingsBackButtonState, settingsBackButtonTextFontSize);
 
       if (settingsBackButtonAction)
       {
@@ -1252,20 +1325,22 @@ int main()
     // tutorial menu
     if (tutorialButtonAction)
     {
-      DrawText("HOW TO PLAY", screenWidth / 2 - MeasureText("HOW TO PLAY", 80) / 2, 50, 80, WHITE);
+      DrawUiTitle("HOW TO PLAY", 60, 70);
 
-      DrawText("PLAYER 1 (BLUE)", 100, 200, 60, BLUE);
-      DrawText("W - Move Up", 100, 300, 40, WHITE);
-      DrawText("S - Move Down", 100, 360, 40, WHITE);
-      DrawText("D - Shoot", 100, 420, 40, WHITE);
+      DrawUiPanel({80.0f, 180.0f, screenWidth / 2.0f - 120.0f, 340.0f});
+      DrawUiPanel({screenWidth / 2.0f + 40.0f, 180.0f, screenWidth / 2.0f - 120.0f, 340.0f});
 
-      DrawText("PLAYER 2 (RED)", screenWidth - 600, 200, 60, RED);
-      DrawText("UP Arrow - Move Up", screenWidth - 600, 300, 40, WHITE);
-      DrawText("DOWN Arrow - Move Down", screenWidth - 600, 360, 40, WHITE);
-      DrawText("LEFT Arrow - Shoot", screenWidth - 600, 420, 40, WHITE);
+      DrawText("PLAYER 1", 120, 210, 50, BLUE);
+      DrawText("W - Move Up", 120, 290, 36, uiText);
+      DrawText("S - Move Down", 120, 350, 36, uiText);
+      DrawText("D - Shoot", 120, 410, 36, uiText);
 
-      DrawRectangleRec(settingsBackButton, GRAY);
-      DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
+      DrawText("PLAYER 2", screenWidth / 2.0f + 80, 210, 50, RED);
+      DrawText("UP Arrow - Move Up", screenWidth / 2.0f + 80, 290, 36, uiText);
+      DrawText("DOWN Arrow - Move Down", screenWidth / 2.0f + 80, 350, 36, uiText);
+      DrawText("LEFT Arrow - Shoot", screenWidth / 2.0f + 80, 410, 36, uiText);
+
+      DrawUiButton(settingsBackButton, settingsBackButtonText, settingsBackButtonState, settingsBackButtonTextFontSize);
 
       if (settingsBackButtonAction)
       {
