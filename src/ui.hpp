@@ -4,7 +4,8 @@
 
 #include <string>
 
-// shared look + small draw helpers (base layout = 1920x1080)
+// Shared UI look and small draw helpers.
+// Layout is designed for 1920x1080 and scaled by window height.
 namespace Ui
 {
 inline constexpr float BASE_W = 1920.0f;

@@ -79,5 +79,5 @@ void Panzer::moveY(char op)
     else if (op == '+')
         position.y += movementSpeed;
     else
-        std::cerr << "Panzer::moveY: bad operator\n";
+        std::cerr << "Panzer::moveY: invalid operator\n";
 }

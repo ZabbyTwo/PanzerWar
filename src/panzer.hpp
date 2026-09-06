@@ -4,6 +4,7 @@
 
 #include <vector>
 
+// One panzer: position, size, movement, shooting, and active bullets.
 class Panzer
 {
 private:
@@ -33,5 +34,5 @@ public:
 
     void addBullet(Vector2 bullet);
     void resetBullets();
-    void moveY(char op); // '-' up, '+' down
+    void moveY(char op); // '-' = up, '+' = down
 };

@@ -1,8 +1,9 @@
-# Panzer War — simple build helpers
-# Usage:
-#   make          # configure + build into bin/
-#   make run      # build and start the game
-#   make clean    # remove build files + binary
+# Panzer War — build helpers
+#
+#   make          configure and build into bin/
+#   make run      build and start the game
+#   make clean    remove build files and the binary
+#   make rebuild  clean, then build
 
 BUILD_DIR := build
 BIN_DIR   := bin

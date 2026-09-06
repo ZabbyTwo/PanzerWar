@@ -32,7 +32,7 @@ else()
   target_link_libraries(panzer_war PRIVATE ${RAYLIB_LIBRARY})
 endif()
 
-# Linux / X11 extras commonly needed with system raylib
+# Linux / X11 libraries commonly required with system raylib
 if(UNIX AND NOT APPLE)
   target_link_libraries(panzer_war PRIVATE GL m pthread dl rt X11)
 endif()
@@ -41,7 +41,7 @@ set_target_properties(panzer_war PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
 )
 
-# Convenience: run from bin so ../resources resolves
+# Run from bin/ so ../resources paths resolve correctly
 add_custom_target(run
   COMMAND ./panzer_war
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"

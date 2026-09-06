@@ -35,5 +35,7 @@ void printSettings(const Settings &settings);
 Resolution parseResolution(const Settings &settings);
 void saveSettings(const Settings &settings);
 void initSettings();
+
+// Scans resources/ (top level only) for audio and image files.
 std::vector<std::string> getAvailableSounds();
 std::vector<std::string> getAvailableBackgrounds();
