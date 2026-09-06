@@ -1,5 +1,5 @@
 shootingSound=../resources/9mm.mp3
-switchSides=NO
+switchSides=YES
 screen=Borderless Window
 resolution=1920x1080
 background=LIGHTGRAY

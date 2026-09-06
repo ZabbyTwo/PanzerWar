@@ -45,6 +45,31 @@ int main()
 
   Sound currentShootSound = LoadSound(settings.shootingSound.c_str());
 
+  // load sprite and crop empty space
+  auto LoadSprite = [](const char *path, Rectangle crop) -> Texture2D
+  {
+    Image img = LoadImage(path);
+    ImageCrop(&img, crop);
+    Texture2D tex = LoadTextureFromImage(img);
+    UnloadImage(img);
+    return tex;
+  };
+
+  Texture2D blueTank = LoadSprite("../resources/bluetank.png", {336, 736, 1328, 528});
+  Texture2D blueTankFire = LoadSprite("../resources/bluetankfire.png", {8, 736, 1656, 528});
+  Texture2D redTank = LoadSprite("../resources/redtank.png", {336, 736, 1328, 528});
+  Texture2D redTankFire = LoadSprite("../resources/redtankfire.png", {352, 736, 1640, 528});
+  Texture2D fireballLeft = LoadSprite("../resources/fireball-goingleft.png", {88, 472, 1792, 968});
+  Texture2D fireballRight = LoadSprite("../resources/fireball-goingright.png", {80, 480, 1792, 960});
+
+  const float panzerHeight = 160.0f;
+  const float panzerWidth = panzerHeight * ((float)redTank.width / (float)redTank.height);
+  const float bulletHeight = 70.0f;
+  const float bulletRadius = 30.0f;
+  const float fireTime = 0.2f;
+  float p1FireTimer = 0.0f;
+  float p2FireTimer = 0.0f;
+
   auto GetColorFromString = [](std::string colorStr) -> Color
   {
     if (colorStr == "WHITE")
@@ -115,13 +140,13 @@ int main()
   LoadNewBackground(settings.background);
 
   // panzer 1
-  Vector2 panzerSize1{200.0f, 100.0f};
-  Vector2 defaultPanzerPosition1{(float)placeToBorder, screenHeight / 2.0f};
+  Vector2 panzerSize1{panzerWidth, panzerHeight};
+  Vector2 defaultPanzerPosition1{(float)placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
   panzer panzer1(defaultPanzerPosition1, panzerSize1);
 
   // panzer 2
-  Vector2 panzerSize2{200.0f, 100.0f};
-  Vector2 defaultPanzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f};
+  Vector2 panzerSize2{panzerWidth, panzerHeight};
+  Vector2 defaultPanzerPosition2{screenWidth - panzerSize2.x - placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
   panzer panzer2(defaultPanzerPosition2, panzerSize2);
 
   int scoreP1 = 0;
@@ -136,7 +161,7 @@ int main()
   float p2ReloadTimer = 0.0f;
 
   int gameModeActive = 0; // 0: Survival, 1: Deathmatch, 2: Custom
-  int roundsActive = 0;   
+  int roundsActive = 0;
 
   float activeReloadTime = 2.0f;
 
@@ -324,6 +349,8 @@ int main()
           p2Ammo = startingAmmo;
           p1ReloadTimer = 0.0f;
           p2ReloadTimer = 0.0f;
+          p1FireTimer = 0.0f;
+          p2FireTimer = 0.0f;
           scoreP1 = 0;
           scoreP2 = 0;
           roundOver = false;
@@ -435,6 +462,10 @@ int main()
         p1ReloadTimer -= GetFrameTime();
       if (p2ReloadTimer > 0)
         p2ReloadTimer -= GetFrameTime();
+      if (p1FireTimer > 0)
+        p1FireTimer -= GetFrameTime();
+      if (p2FireTimer > 0)
+        p2FireTimer -= GetFrameTime();
 
       if (roundOver)
       {
@@ -475,6 +506,8 @@ int main()
 
             p1ReloadTimer = 0.0f;
             p2ReloadTimer = 0.0f;
+            p1FireTimer = 0.0f;
+            p2FireTimer = 0.0f;
             countdownStart = true;
             countdownStartTime = 3;
             countdownTimer = 0.0f;
@@ -506,6 +539,7 @@ int main()
             if (p1Ammo > 0)
               p1Ammo--;
             p1ReloadTimer = activeReloadTime;
+            p1FireTimer = fireTime;
 
             StopSound(currentShootSound);
             PlaySound(currentShootSound);
@@ -516,7 +550,7 @@ int main()
             Rectangle panzer2Hitbox{panzer2.getPanzerPosition().x, panzer2.getPanzerPosition().y,
                                     panzer2.getPanzerSize().x, panzer2.getPanzerSize().y};
 
-            if (!panzer2.getIsPanzerHit() && CheckCollisionCircleRec(fired, 20.0f, panzer2Hitbox))
+            if (!panzer2.getIsPanzerHit() && CheckCollisionCircleRec(fired, bulletRadius, panzer2Hitbox))
             {
               panzer2.setIsPanzerHit(true);
               scoreP1++;
@@ -535,7 +569,7 @@ int main()
           }
           if (IsKeyDown(KEY_DOWN))
           {
-            if (panzer2.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
+            if (panzer2.getPanzerPosition().y < screenHeight - panzer2.getPanzerSize().y - placeToBorder)
               panzer2.changePanzerPositionY('+');
           }
           if (IsKeyPressed(KEY_LEFT) && p2ReloadTimer <= 0.0f && p2Ammo != 0)
@@ -546,6 +580,7 @@ int main()
             if (p2Ammo > 0)
               p2Ammo--;
             p2ReloadTimer = activeReloadTime;
+            p2FireTimer = fireTime;
 
             StopSound(currentShootSound);
             PlaySound(currentShootSound);
@@ -556,7 +591,7 @@ int main()
             Rectangle panzer1Hitbox{panzer1.getPanzerPosition().x, panzer1.getPanzerPosition().y,
                                     panzer1.getPanzerSize().x, panzer1.getPanzerSize().y};
 
-            if (!panzer1.getIsPanzerHit() && CheckCollisionCircleRec(fired, 20.0f, panzer1Hitbox))
+            if (!panzer1.getIsPanzerHit() && CheckCollisionCircleRec(fired, bulletRadius, panzer1Hitbox))
             {
               panzer1.setIsPanzerHit(true);
               scoreP2++;
@@ -687,20 +722,85 @@ int main()
         // for panzer1
         if (!panzer1.getIsPanzerHit())
         {
-          DrawRectangleV(panzer1.getPanzerPosition(), panzer1.getPanzerSize(), settings.switchSides ? RED : BLUE);
+          Texture2D panzer1Tex = blueTank;
+          Texture2D panzer1Idle = blueTank;
+          float flip = -1.0f; // blue faces left, flip to face right
+
+          if (settings.switchSides)
+          {
+            panzer1Tex = redTank;
+            panzer1Idle = redTank;
+            flip = 1.0f; // red already faces right
+          }
+
+          if (p1FireTimer > 0)
+          {
+            if (settings.switchSides)
+              panzer1Tex = redTankFire;
+            else
+              panzer1Tex = blueTankFire;
+          }
+
+          float scale = panzerHeight / (float)panzer1Idle.height;
+          float drawW = panzer1Tex.width * scale;
+          float drawH = panzer1Tex.height * scale;
+
+          DrawTexturePro(panzer1Tex,
+                         {0, 0, flip * panzer1Tex.width, (float)panzer1Tex.height},
+                         {panzer1.getPanzerPosition().x, panzer1.getPanzerPosition().y + (panzerHeight - drawH) / 2.0f, drawW, drawH},
+                         {0, 0}, 0, WHITE);
+
           for (Vector2 bullet : panzer1.getPanzerBullets())
           {
-            DrawCircleV(bullet, 20, YELLOW);
+            float bw = fireballRight.width * (bulletHeight / (float)fireballRight.height);
+            float bh = bulletHeight;
+            DrawTexturePro(fireballRight,
+                           {0, 0, (float)fireballRight.width, (float)fireballRight.height},
+                           {bullet.x - bw * 0.78f, bullet.y - bh / 2.0f, bw, bh},
+                           {0, 0}, 0, WHITE);
           }
         }
 
         // for panzer2
         if (!panzer2.getIsPanzerHit())
         {
-          DrawRectangleV(panzer2.getPanzerPosition(), panzer2.getPanzerSize(), settings.switchSides ? BLUE : RED);
+          Texture2D panzer2Tex = redTank;
+          Texture2D panzer2Idle = redTank;
+          float flip = -1.0f; // red faces right, flip to face left
+
+          if (settings.switchSides)
+          {
+            panzer2Tex = blueTank;
+            panzer2Idle = blueTank;
+            flip = 1.0f; // blue already faces left
+          }
+
+          if (p2FireTimer > 0)
+          {
+            if (settings.switchSides)
+              panzer2Tex = blueTankFire;
+            else
+              panzer2Tex = redTankFire;
+          }
+
+          float scale = panzerHeight / (float)panzer2Idle.height;
+          float drawW = panzer2Tex.width * scale;
+          float drawH = panzer2Tex.height * scale;
+          float drawX = panzer2.getPanzerPosition().x - (drawW - panzer2.getPanzerSize().x);
+
+          DrawTexturePro(panzer2Tex,
+                         {0, 0, flip * panzer2Tex.width, (float)panzer2Tex.height},
+                         {drawX, panzer2.getPanzerPosition().y + (panzerHeight - drawH) / 2.0f, drawW, drawH},
+                         {0, 0}, 0, WHITE);
+
           for (Vector2 bullet : panzer2.getPanzerBullets())
           {
-            DrawCircleV(bullet, 20, YELLOW);
+            float bw = fireballLeft.width * (bulletHeight / (float)fireballLeft.height);
+            float bh = bulletHeight;
+            DrawTexturePro(fireballLeft,
+                           {0, 0, (float)fireballLeft.width, (float)fireballLeft.height},
+                           {bullet.x - bw * 0.22f, bullet.y - bh / 2.0f, bw, bh},
+                           {0, 0}, 0, WHITE);
           }
         }
       }
@@ -924,8 +1024,8 @@ int main()
         settingsBackButtonTextX = settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2;
         settingsBackButtonTextY = settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2;
 
-        defaultPanzerPosition1 = {(float)placeToBorder, screenHeight / 2.0f};
-        defaultPanzerPosition2 = {screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f};
+        defaultPanzerPosition1 = {(float)placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
+        defaultPanzerPosition2 = {screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f - panzerHeight / 2.0f};
       }
 
       // back button
@@ -1005,6 +1105,13 @@ int main()
 
   UnloadSound(currentShootSound);
   CloseAudioDevice();
+
+  UnloadTexture(blueTank);
+  UnloadTexture(blueTankFire);
+  UnloadTexture(redTank);
+  UnloadTexture(redTankFire);
+  UnloadTexture(fireballLeft);
+  UnloadTexture(fireballRight);
 
   if (useBgTexture)
     UnloadTexture(bgTexture);

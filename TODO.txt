@@ -35,9 +35,9 @@
 
 +add reload timer, and ammo count on each side
 
--sprites
-    -panzers
-    -rounds
++sprites
+    +panzers
+    +rounds
 
 -make btns cooler
     -when hover do sth
@@ -45,6 +45,8 @@
 -sound effects
     -button clicks/hovers -> tank hangar sounds
     -changes, eg in settings
+
+-make ui better etc.
 
 -cleanup code
     -buttons in classes and button logics

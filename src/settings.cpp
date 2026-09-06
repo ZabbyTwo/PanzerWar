@@ -15,7 +15,7 @@ Settings loadSettings()
         int pos = row.find('=');
         std::string key = row.substr(0, pos);
         std::string value = row.substr(pos + 1);
-  
+
         // general settings
         if (key == "shootingSound")
         {
@@ -172,7 +172,10 @@ std::vector<std::string> getAvailableBackgrounds()
             std::string ext = entry.path().extension().string();
             if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
             {
-                availableBackgrounds.push_back(entry.path().filename().string());
+                std::string name = entry.path().filename().string();
+                if (name.find("tank") != std::string::npos || name.find("fireball") != std::string::npos)
+                    continue;
+                availableBackgrounds.push_back(name);
             }
         }
     }
