@@ -7,9 +7,9 @@
 class panzer
 {
 private:
-    // constants
-    const float MovementSpeed{10};
-    const float ShootingVelocity{10};
+    // constants removed to allow custom game mode adjustments
+    float MovementSpeed{10};
+    float ShootingVelocity{20};
 
     bool IsPanzerHit{false};
     std::vector<Vector2> PanzerBullets;
@@ -34,11 +34,12 @@ public:
 
     // setters
     void setIsPanzerHit(bool state);
-    // void setPanzerPosition(Vector2 coordinates);
-    // void setPanzerSize(Vector2 size);
-    // void setPanzerBullets(Vector2 bullet);
+    void setPanzerPosition(Vector2 coordinates);
+    void setMovementSpeed(float speed);
+    void setShootingVelocity(float vel);
 
     // logic
     void addPanzerBullets(Vector2 bullet);
-    void changePanzerPositionY(char op); // op for operator
+    void resetPanzerBullets();
+    void changePanzerPositionY(char op);
 };

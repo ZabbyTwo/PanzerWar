@@ -27,9 +27,6 @@ int main()
   int screenHeight{resolution.y};
   const int placeToBorder{30};
 
-  const float movementSpeed{10};
-  const float shootingVelocity{20};
-
   // Window Settings
 
   if (settings.screen == Fullscreen)
@@ -119,54 +116,54 @@ int main()
 
   // panzer 1
   Vector2 panzerSize1{200.0f, 100.0f};
-  Vector2 panzerPosition1{(float)placeToBorder, screenHeight / 2.0f};
-  panzer panzer1(panzerPosition1, panzerSize1);
+  Vector2 defaultPanzerPosition1{(float)placeToBorder, screenHeight / 2.0f};
+  panzer panzer1(defaultPanzerPosition1, panzerSize1);
 
   // panzer 2
   Vector2 panzerSize2{200.0f, 100.0f};
-  Vector2 panzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f};
-  panzer panzer2(panzerPosition2, panzerSize2);
+  Vector2 defaultPanzerPosition2{screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f};
+  panzer panzer2(defaultPanzerPosition2, panzerSize2);
 
-  const int buttonGap{40};
-  const int startButtonWidth{600};
-  const int startButtonHeight{200};
-  const int settingsButtonWidth{450};
-  const int settingsButtonHeight{150};
-  const int tutorialButtonWidth{450};
-  const int tutorialButtonHeight{150};
-  const int quitButtonWidth{450};
-  const int quitButtonHeight{150};
+  int scoreP1 = 0;
+  int scoreP2 = 0;
+  bool matchOver = false;
+  bool roundOver = false;
+  float roundTransitionTimer = 0.0f;
 
-  const float totalMenuHeight = startButtonHeight + settingsButtonHeight + tutorialButtonHeight + quitButtonHeight + (buttonGap * 3);
-  const float menuStartY = screenHeight / 2.0f - totalMenuHeight / 2.0f;
+  int p1Ammo = 0;
+  int p2Ammo = 0;
+  float p1ReloadTimer = 0.0f;
+  float p2ReloadTimer = 0.0f;
 
-  // start button
-  Rectangle startButton{screenWidth / 2.0f - startButtonWidth / 2.0f,
-                        menuStartY,
-                        (float)startButtonWidth,
-                        (float)startButtonHeight};
+  int gameModeActive = 0; // 0: Survival, 1: Deathmatch, 2: Custom
+  int roundsActive = 0;   
+
+  float activeReloadTime = 2.0f;
+
+  float customMoveSpeed = 10.0f;
+  float customShootSpeed = 20.0f;
+  float customReloadSpeed = 1.0f;
+  float customAmmoStart = 50.0f;
+
+  const int buttonWidth{450};
+  const int buttonHeight{120};
+  const int buttonGap{15};
+  int menuTextFontSize{55};
+
   bool startButtonAction{false};
   int startButtonState{0};
-  const char *startButtonText{"PLAY"};
-  int startButtonTextFontSize{100};
-  int startButtonTextWidth{MeasureText(startButtonText, startButtonTextFontSize)};
-  float startButtonTextX{startButton.x + (startButton.width - startButtonTextWidth) / 2};
-  float startButtonTextY{startButton.y + (startButton.height - startButtonTextFontSize) / 2};
 
-  // settings button
-  Rectangle settingsButton{screenWidth / 2.0f - settingsButtonWidth / 2.0f,
-                           startButton.y + startButton.height + buttonGap,
-                           (float)settingsButtonWidth,
-                           (float)settingsButtonHeight};
+  bool gameModeMenuAction{false};
+  int gameModeMenuState{0};
+
   bool settingsButtonAction{false};
   int settingsButtonState{0};
-  const char *settingsButtonText{"SETTINGS"};
-  int settingsButtonTextFontSize{80};
-  int settingsButtonTextWidth{MeasureText(settingsButtonText, settingsButtonTextFontSize)};
-  float settingsButtonTextX{settingsButton.x + (settingsButton.width - settingsButtonTextWidth) / 2};
-  float settingsButtonTextY{settingsButton.y + (settingsButton.height - settingsButtonTextFontSize) / 2};
 
-  // text in settings
+  bool tutorialButtonAction{false};
+  int tutorialButtonState{0};
+
+  int quitButtonState{0};
+
   int settingsFontTextSize{60};
 
   // settings back button
@@ -184,40 +181,13 @@ int main()
   float settingsBackButtonTextX{settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2};
   float settingsBackButtonTextY{settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2};
 
-  // tutorial button
-  Rectangle tutorialButton{screenWidth / 2.0f - tutorialButtonWidth / 2.0f,
-                           settingsButton.y + settingsButton.height + buttonGap,
-                           (float)tutorialButtonWidth,
-                           (float)tutorialButtonHeight};
-  bool tutorialButtonAction{false};
-  int tutorialButtonState{0};
-  const char *tutorialButtonText{"HOW TO PLAY"};
-  int tutorialButtonTextFontSize{60};
-  int tutorialButtonTextWidth{MeasureText(tutorialButtonText, tutorialButtonTextFontSize)};
-  float tutorialButtonTextX{tutorialButton.x + (tutorialButton.width - tutorialButtonTextWidth) / 2};
-  float tutorialButtonTextY{tutorialButton.y + (tutorialButton.height - tutorialButtonTextFontSize) / 2};
-
-  // quit button
-  Rectangle quitButton{screenWidth / 2.0f - quitButtonWidth / 2.0f,
-                       tutorialButton.y + tutorialButton.height + buttonGap,
-                       (float)quitButtonWidth,
-                       (float)quitButtonHeight};
-  int quitButtonState{0};
-  const char *quitButtonText{"QUIT"};
-  int quitButtonTextFontSize{60};
-  int quitButtonTextWidth{MeasureText(quitButtonText, quitButtonTextFontSize)};
-  float quitButtonTextX{quitButton.x + (quitButton.width - quitButtonTextWidth) / 2};
-  float quitButtonTextY{quitButton.y + (quitButton.height - quitButtonTextFontSize) / 2};
-
   char shootSoundInput[64] = {0};
   strncpy(shootSoundInput, settings.shootingSound.c_str(), 63);
 
   char switchSidesInput[64] = {0};
   strncpy(switchSidesInput, settings.switchSides ? "YES" : "NO", 63);
 
-  const char *screenOptions = "Windowed;Borderless;Fullscreen";
   int screenActive = 0;
-
   if (settings.screen == Windowed)
     screenActive = 0;
   else if (settings.screen == BorderlessWindow)
@@ -225,9 +195,7 @@ int main()
   else if (settings.screen == Fullscreen)
     screenActive = 2;
 
-  const char *resolutionOptions = "1920x1080;1600x900;1280x720;1024x768";
   int resolutionActive = 0;
-
   if (settings.resolution == "1920x1080")
     resolutionActive = 0;
   else if (settings.resolution == "1600x900")
@@ -239,12 +207,6 @@ int main()
 
   char backgroundInput[64] = {0};
   strncpy(backgroundInput, settings.background.c_str(), 63);
-
-  // edit states for GuiTextBox
-  bool soundEdit = false;
-  bool screenEdit = false;
-  bool resolutionEdit = false;
-  bool backgroundEdit = false;
 
   // countdown
   bool countdownStart{false};
@@ -287,8 +249,26 @@ int main()
   {
     mousePoint = GetMousePosition();
 
+    int numButtons = 5;
+    float totalMenuHeight = (buttonHeight * numButtons) + (buttonGap * (numButtons - 1));
+    float currentBtnY = screenHeight / 2.0f - totalMenuHeight / 2.0f;
+
+    Rectangle startButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    currentBtnY += buttonHeight + buttonGap;
+
+    Rectangle gameModeButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    currentBtnY += buttonHeight + buttonGap;
+
+    Rectangle settingsButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    currentBtnY += buttonHeight + buttonGap;
+
+    Rectangle tutorialButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+    currentBtnY += buttonHeight + buttonGap;
+
+    Rectangle quitButton{screenWidth / 2.0f - buttonWidth / 2.0f, currentBtnY, (float)buttonWidth, (float)buttonHeight};
+
     // Main Menu check
-    if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction)
+    if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction && !gameModeMenuAction && !matchOver)
     {
       // start button
       if (CheckCollisionPointRec(mousePoint, startButton))
@@ -302,11 +282,76 @@ int main()
         {
           startButtonAction = true;
           countdownStart = true;
+          countdownStartTime = 3;
+          countdownTimer = 0.0f;
+
+          float activeMove = 10.0f;
+          float activeShoot = 20.0f;
+          int startingAmmo = 50;
+
+          if (gameModeActive == 0)
+          {
+            activeReloadTime = 2.0f;
+            startingAmmo = 50;
+          }
+          else if (gameModeActive == 1)
+          {
+            activeReloadTime = 2.0f;
+            startingAmmo = 150;
+          }
+          else if (gameModeActive == 2)
+          {
+            activeMove = customMoveSpeed;
+            activeShoot = customShootSpeed;
+            activeReloadTime = customReloadSpeed;
+            startingAmmo = (int)customAmmoStart;
+          }
+
+          // Full Match Reset
+          panzer1.setMovementSpeed(activeMove);
+          panzer1.setShootingVelocity(activeShoot);
+          panzer2.setMovementSpeed(activeMove);
+          panzer2.setShootingVelocity(activeShoot);
+
+          panzer1.setIsPanzerHit(false);
+          panzer2.setIsPanzerHit(false);
+          panzer1.setPanzerPosition(defaultPanzerPosition1);
+          panzer2.setPanzerPosition(defaultPanzerPosition2);
+          panzer1.resetPanzerBullets();
+          panzer2.resetPanzerBullets();
+
+          p1Ammo = startingAmmo;
+          p2Ammo = startingAmmo;
+          p1ReloadTimer = 0.0f;
+          p2ReloadTimer = 0.0f;
+          scoreP1 = 0;
+          scoreP2 = 0;
+          roundOver = false;
+          matchOver = false;
+          roundTransitionTimer = 0.0f;
         }
       }
       else
       {
         startButtonState = 0;
+      }
+
+      // game mode menu button
+      if (CheckCollisionPointRec(mousePoint, gameModeButton))
+      {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+          gameModeMenuState = 2;
+        else
+          gameModeMenuState = 1;
+
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+          gameModeMenuAction = true;
+        }
+      }
+      else
+      {
+        gameModeMenuState = 0;
       }
 
       // tutorial button
@@ -363,8 +408,7 @@ int main()
         quitButtonState = 0;
       }
     }
-    // Settings Menu check
-    else if (settingsButtonAction)
+    else if (settingsButtonAction || tutorialButtonAction || gameModeMenuAction)
     {
       // settings back button
       if (CheckCollisionPointRec(mousePoint, settingsBackButton))
@@ -384,102 +428,140 @@ int main()
         settingsBackButtonState = 0;
       }
     }
-    // Tutorial Menu check
-    else if (tutorialButtonAction)
-    {
-      // tutorial back button
-      if (CheckCollisionPointRec(mousePoint, settingsBackButton))
-      {
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-          settingsBackButtonState = 2;
-        else
-          settingsBackButtonState = 1;
 
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+    if (startButtonAction && !countdownStart && !matchOver)
+    {
+      if (p1ReloadTimer > 0)
+        p1ReloadTimer -= GetFrameTime();
+      if (p2ReloadTimer > 0)
+        p2ReloadTimer -= GetFrameTime();
+
+      if (roundOver)
+      {
+        roundTransitionTimer += GetFrameTime();
+        if (roundTransitionTimer >= 2.0f)
         {
-          tutorialButtonAction = false;
+          int winsNeeded = (roundsActive == 0) ? 2 : (roundsActive == 1) ? 3
+                                                                         : 4;
+          if (scoreP1 >= winsNeeded || scoreP2 >= winsNeeded)
+          {
+            matchOver = true;
+          }
+          else
+          {
+            // Reset just the round variables
+            panzer1.setIsPanzerHit(false);
+            panzer2.setIsPanzerHit(false);
+            panzer1.setPanzerPosition(defaultPanzerPosition1);
+            panzer2.setPanzerPosition(defaultPanzerPosition2);
+            panzer1.resetPanzerBullets();
+            panzer2.resetPanzerBullets();
+
+            if (gameModeActive == 0)
+            {
+              p1Ammo = 50;
+              p2Ammo = 50;
+            }
+            else if (gameModeActive == 1)
+            {
+              p1Ammo = 150;
+              p2Ammo = 150;
+            }
+            else if (gameModeActive == 2)
+            {
+              p1Ammo = (int)customAmmoStart;
+              p2Ammo = (int)customAmmoStart;
+            }
+
+            p1ReloadTimer = 0.0f;
+            p2ReloadTimer = 0.0f;
+            countdownStart = true;
+            countdownStartTime = 3;
+            countdownTimer = 0.0f;
+            roundOver = false;
+            roundTransitionTimer = 0.0f;
+          }
         }
       }
       else
       {
-        settingsBackButtonState = 0;
-      }
-    }
+        // for panzer1
+        if (!panzer1.getIsPanzerHit())
+        {
+          if (IsKeyDown(KEY_W))
+          {
+            if (panzer1.getPanzerPosition().y > placeToBorder)
+              panzer1.changePanzerPositionY('-');
+          }
+          if (IsKeyDown(KEY_S))
+          {
+            if (panzer1.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
+              panzer1.changePanzerPositionY('+');
+          }
+          if (IsKeyPressed(KEY_D) && p1ReloadTimer <= 0.0f && p1Ammo != 0)
+          {
+            panzer1.addPanzerBullets({panzer1.getPanzerPosition().x + panzer1.getPanzerSize().x,
+                                      panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2});
 
-    if (!countdownStart)
-    {
-      // for panzer1
-      if (!panzer1.getIsPanzerHit())
-      {
-        if (IsKeyDown(KEY_W))
-        {
-          if (panzer1.getPanzerPosition().y > placeToBorder)
-          {
-            panzer1.changePanzerPositionY('-');
-          }
-        }
-        if (IsKeyDown(KEY_S))
-        {
-          if (panzer1.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
-          {
-            panzer1.changePanzerPositionY('+');
-          }
-        }
-        if (IsKeyPressed(KEY_D))
-        {
-          panzer1.addPanzerBullets({panzer1.getPanzerPosition().x + panzer1.getPanzerSize().x,
-                                    panzer1.getPanzerPosition().y + panzer1.getPanzerSize().y / 2});
+            if (p1Ammo > 0)
+              p1Ammo--;
+            p1ReloadTimer = activeReloadTime;
 
-          StopSound(currentShootSound);
-          PlaySound(currentShootSound);
-        }
-        for (Vector2 &fired : panzer1.getPanzerBullets())
-        {
-          fired.x += shootingVelocity;
-          Rectangle panzer2Hitbox{panzer2.getPanzerPosition().x, panzer2.getPanzerPosition().y,
-                                  panzer2.getPanzerSize().x, panzer2.getPanzerSize().y};
-          if (CheckCollisionCircleRec(fired, 20.0f, panzer2Hitbox))
-          {
-            panzer2.setIsPanzerHit(true);
+            StopSound(currentShootSound);
+            PlaySound(currentShootSound);
           }
-        }
-      }
+          for (Vector2 &fired : panzer1.getPanzerBullets())
+          {
+            fired.x += panzer1.getShootingVelocity();
+            Rectangle panzer2Hitbox{panzer2.getPanzerPosition().x, panzer2.getPanzerPosition().y,
+                                    panzer2.getPanzerSize().x, panzer2.getPanzerSize().y};
 
-      // for panzer2
-      if (!panzer2.getIsPanzerHit())
-      {
-        if (IsKeyDown(KEY_UP))
-        {
-          if (panzer2.getPanzerPosition().y > placeToBorder)
-          {
-            panzer2.changePanzerPositionY('-');
+            if (!panzer2.getIsPanzerHit() && CheckCollisionCircleRec(fired, 20.0f, panzer2Hitbox))
+            {
+              panzer2.setIsPanzerHit(true);
+              scoreP1++;
+              roundOver = true;
+            }
           }
         }
-        if (IsKeyDown(KEY_DOWN))
-        {
-          if (panzer2.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
-          {
-            panzer2.changePanzerPositionY('+');
-          }
-        }
-        if (IsKeyPressed(KEY_LEFT))
-        {
-          panzer2.addPanzerBullets({panzer2.getPanzerPosition().x,
-                                    panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2});
 
-          StopSound(currentShootSound);
-          PlaySound(currentShootSound);
-        }
-        for (Vector2 &fired : panzer2.getPanzerBullets())
+        // for panzer2
+        if (!panzer2.getIsPanzerHit())
         {
-          fired.x -= shootingVelocity;
-          Rectangle panzer1Hitbox{panzer1.getPanzerPosition().x,
-                                  panzer1.getPanzerPosition().y,
-                                  panzer1.getPanzerSize().x,
-                                  panzer1.getPanzerSize().y};
-          if (CheckCollisionCircleRec(fired, 20.0f, panzer1Hitbox))
+          if (IsKeyDown(KEY_UP))
           {
-            panzer1.setIsPanzerHit(true);
+            if (panzer2.getPanzerPosition().y > placeToBorder)
+              panzer2.changePanzerPositionY('-');
+          }
+          if (IsKeyDown(KEY_DOWN))
+          {
+            if (panzer2.getPanzerPosition().y < screenHeight - panzer1.getPanzerSize().y - placeToBorder)
+              panzer2.changePanzerPositionY('+');
+          }
+          if (IsKeyPressed(KEY_LEFT) && p2ReloadTimer <= 0.0f && p2Ammo != 0)
+          {
+            panzer2.addPanzerBullets({panzer2.getPanzerPosition().x,
+                                      panzer2.getPanzerPosition().y + panzer2.getPanzerSize().y / 2});
+
+            if (p2Ammo > 0)
+              p2Ammo--;
+            p2ReloadTimer = activeReloadTime;
+
+            StopSound(currentShootSound);
+            PlaySound(currentShootSound);
+          }
+          for (Vector2 &fired : panzer2.getPanzerBullets())
+          {
+            fired.x -= panzer2.getShootingVelocity();
+            Rectangle panzer1Hitbox{panzer1.getPanzerPosition().x, panzer1.getPanzerPosition().y,
+                                    panzer1.getPanzerSize().x, panzer1.getPanzerSize().y};
+
+            if (!panzer1.getIsPanzerHit() && CheckCollisionCircleRec(fired, 20.0f, panzer1Hitbox))
+            {
+              panzer1.setIsPanzerHit(true);
+              scoreP2++;
+              roundOver = true;
+            }
           }
         }
       }
@@ -488,13 +570,11 @@ int main()
     if (countdownStart)
     {
       countdownTimer += GetFrameTime();
-
       if (countdownTimer >= 1.0f)
       {
         countdownStartTime--;
         countdownTimer = 0.0f;
       }
-
       if (countdownStartTime <= 0)
       {
         countdownStart = false;
@@ -522,30 +602,88 @@ int main()
       ClearBackground(BLACK);
     }
 
-    if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction)
+    auto DrawCenteredTextInRec = [&](Rectangle rec, const char *text, Color color)
+    {
+      int tw = MeasureText(text, menuTextFontSize);
+      DrawText(text, rec.x + (rec.width - tw) / 2, rec.y + (rec.height - menuTextFontSize) / 2, menuTextFontSize, color);
+    };
+
+    if (!startButtonAction && !settingsButtonAction && !tutorialButtonAction && !gameModeMenuAction && !matchOver)
     {
       DrawRectangleRec(startButton, GREEN);
-      DrawText(startButtonText, startButtonTextX, startButtonTextY, startButtonTextFontSize, BLACK);
+      DrawCenteredTextInRec(startButton, "PLAY", BLACK);
+
+      DrawRectangleRec(gameModeButton, ORANGE);
+      DrawCenteredTextInRec(gameModeButton, "GAME MODES", BLACK);
 
       DrawRectangleRec(settingsButton, YELLOW);
-      DrawText(settingsButtonText, settingsButtonTextX, settingsButtonTextY, settingsButtonTextFontSize, BLACK);
+      DrawCenteredTextInRec(settingsButton, "SETTINGS", BLACK);
 
       DrawRectangleRec(tutorialButton, SKYBLUE);
-      DrawText(tutorialButtonText, tutorialButtonTextX, tutorialButtonTextY, tutorialButtonTextFontSize, BLACK);
+      DrawCenteredTextInRec(tutorialButton, "HOW TO PLAY", BLACK);
 
       DrawRectangleRec(quitButton, RED);
-      DrawText(quitButtonText, quitButtonTextX, quitButtonTextY, quitButtonTextFontSize, BLACK);
+      DrawCenteredTextInRec(quitButton, "QUIT", BLACK);
     }
 
     if (startButtonAction)
     {
-      if (countdownStart)
+      if (matchOver)
+      {
+        const char *winText = (scoreP1 > scoreP2) ? "PLAYER 1 WINS THE MATCH!" : "PLAYER 2 WINS THE MATCH!";
+        DrawText(winText, screenWidth / 2 - MeasureText(winText, 80) / 2, screenHeight / 2 - 100, 80, GOLD);
+
+        Rectangle menuBtn = {screenWidth / 2.0f - buttonWidth / 2.0f, (float)(screenHeight / 2 + 50), (float)buttonWidth, (float)buttonHeight};
+        DrawRectangleRec(menuBtn, GRAY);
+        DrawCenteredTextInRec(menuBtn, "MAIN MENU", BLACK);
+
+        // Full reset back to menu
+        if (CheckCollisionPointRec(mousePoint, menuBtn) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+          matchOver = false;
+          roundOver = false;
+          startButtonAction = false;
+          countdownStart = false;
+          panzer1.setIsPanzerHit(false);
+          panzer2.setIsPanzerHit(false);
+          panzer1.setPanzerPosition(defaultPanzerPosition1);
+          panzer2.setPanzerPosition(defaultPanzerPosition2);
+          panzer1.resetPanzerBullets();
+          panzer2.resetPanzerBullets();
+          scoreP1 = 0;
+          scoreP2 = 0;
+        }
+      }
+      else if (countdownStart)
       {
         const char *text = TextFormat("%d", countdownStartTime);
         DrawText(text, screenWidth / 2, screenHeight / 2, 120, DARKGRAY);
       }
       else
       {
+        const char *p1AmmoStr = (p1Ammo < 0) ? "INF" : TextFormat("%d", p1Ammo);
+        const char *p2AmmoStr = (p2Ammo < 0) ? "INF" : TextFormat("%d", p2Ammo);
+
+        // P1 Top Center position
+        const char *p1Text = TextFormat("P1 SCORE: %d     AMMO: %s", scoreP1, p1AmmoStr);
+        int p1Width = MeasureText(p1Text, 40);
+        DrawText(p1Text, screenWidth / 2 - p1Width / 2, 30, 40, settings.switchSides ? RED : BLUE);
+        if (p1ReloadTimer > 0)
+          DrawText("RELOADING", screenWidth / 2 - MeasureText("RELOADING", 20) / 2, 75, 20, YELLOW);
+
+        // P2 Bottom Center position
+        const char *p2Text = TextFormat("P2 SCORE: %d     AMMO: %s", scoreP2, p2AmmoStr);
+        int p2Width = MeasureText(p2Text, 40);
+        DrawText(p2Text, screenWidth / 2 - p2Width / 2, screenHeight - 90, 40, settings.switchSides ? BLUE : RED);
+        if (p2ReloadTimer > 0)
+          DrawText("RELOADING", screenWidth / 2 - MeasureText("RELOADING", 20) / 2, screenHeight - 45, 20, YELLOW);
+
+        if (roundOver)
+        {
+          const char *rwText = panzer2.getIsPanzerHit() ? "PLAYER 1 WINS ROUND!" : "PLAYER 2 WINS ROUND!";
+          DrawText(rwText, screenWidth / 2 - MeasureText(rwText, 60) / 2, screenHeight / 2 - 30, 60, GOLD);
+        }
+
         // for panzer1
         if (!panzer1.getIsPanzerHit())
         {
@@ -568,57 +706,157 @@ int main()
       }
     }
 
+    // game mode menu
+    if (gameModeMenuAction)
+    {
+      GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
+
+      int boxWidth = 450;
+      int boxHeight = settingsFontTextSize + 15;
+      int gapY = 20;
+
+      int numRows = 6;
+      float totalHeight = (boxHeight * numRows) + (gapY * (numRows - 1));
+      float startY = screenHeight / 2.0f - totalHeight / 2.0f;
+
+      auto DrawRowLabel = [&](const char *text, float y)
+      {
+        int textW = MeasureText(text, settingsFontTextSize);
+        DrawText(text, screenWidth / 2 - 20 - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, WHITE);
+      };
+
+      float controlX = screenWidth / 2.0f + 20.0f;
+      float currentY = startY;
+
+      DrawRowLabel("Game Mode:", currentY);
+      const char *currentModeText = (gameModeActive == 0) ? "Survival" : (gameModeActive == 1) ? "Deathmatch"
+                                                                                               : "Custom";
+      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, currentModeText))
+      {
+        gameModeActive++;
+        if (gameModeActive > 2)
+          gameModeActive = 0;
+      }
+      currentY += boxHeight + gapY;
+
+      DrawRowLabel("Rounds:", currentY);
+      const char *currentRoundsText = (roundsActive == 0) ? "Best of 3" : (roundsActive == 1) ? "Best of 5"
+                                                                                              : "Best of 7";
+      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, currentRoundsText))
+      {
+        roundsActive++;
+        if (roundsActive > 2)
+          roundsActive = 0;
+      }
+      currentY += boxHeight + gapY;
+
+      currentY += gapY;
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 40);
+
+      if (gameModeActive == 2)
+      {
+        DrawRowLabel("Move Speed:", currentY);
+        GuiSliderBar({controlX, currentY, (float)boxWidth, (float)boxHeight}, NULL, TextFormat("%0.1f", customMoveSpeed), &customMoveSpeed, 5.0f, 30.0f);
+        currentY += boxHeight + gapY;
+
+        DrawRowLabel("Shoot Speed:", currentY);
+        GuiSliderBar({controlX, currentY, (float)boxWidth, (float)boxHeight}, NULL, TextFormat("%0.1f", customShootSpeed), &customShootSpeed, 10.0f, 50.0f);
+        currentY += boxHeight + gapY;
+
+        DrawRowLabel("Reload Time:", currentY);
+        GuiSliderBar({controlX, currentY, (float)boxWidth, (float)boxHeight}, NULL, TextFormat("%0.1f s", customReloadSpeed), &customReloadSpeed, 0.0f, 5.0f);
+        currentY += boxHeight + gapY;
+
+        DrawRowLabel("Ammunition:", currentY);
+        GuiSliderBar({controlX, currentY, (float)boxWidth, (float)boxHeight}, NULL, TextFormat("%i", (int)customAmmoStart), &customAmmoStart, 1.0f, 150.0f);
+      }
+      else
+      {
+        const char *moveText = "10.0";
+        const char *shootText = "20.0";
+        const char *reloadText = "2.0 s";
+        const char *ammoText = (gameModeActive == 0) ? "50" : "150";
+
+        auto DrawStaticRule = [&](const char *label, const char *value, float y)
+        {
+          DrawRowLabel(label, y);
+          DrawRectangle(controlX, y, boxWidth, boxHeight, Fade(GRAY, 0.5f));
+          DrawRectangleLines(controlX, y, boxWidth, boxHeight, Fade(DARKGRAY, 0.5f));
+          DrawText(value, controlX + boxWidth / 2 - MeasureText(value, 40) / 2, y + (boxHeight / 2) - 20, 40, LIGHTGRAY);
+        };
+
+        DrawStaticRule("Move Speed:", moveText, currentY);
+        currentY += boxHeight + gapY;
+        DrawStaticRule("Shoot Speed:", shootText, currentY);
+        currentY += boxHeight + gapY;
+        DrawStaticRule("Reload Time:", reloadText, currentY);
+        currentY += boxHeight + gapY;
+        DrawStaticRule("Ammunition:", ammoText, currentY);
+      }
+
+      DrawRectangleRec(settingsBackButton, GRAY);
+      DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
+
+      if (settingsBackButtonAction)
+      {
+        gameModeMenuAction = false;
+        settingsBackButtonAction = false;
+      }
+    }
+
     // settings menu
     if (settingsButtonAction)
     {
       GuiSetStyle(DEFAULT, TEXT_SIZE, settingsFontTextSize - 10);
 
-      int boxWidth = 600;
-      int boxWidthPanzer = 200;
+      int boxWidth = 450;
       int boxHeight = settingsFontTextSize + 15;
+      int gapY = 20;
 
-      float boxStartX = placeToBorder + MeasureText("Shooting Sound: ", settingsFontTextSize) + 20;
+      int numRows = 5;
+      float totalHeight = (boxHeight * numRows) + (gapY * (numRows - 1));
+      float startY = screenHeight / 2.0f - totalHeight / 2.0f;
 
-      auto GetBoxY = [&](int rowMultiplier) -> float
+      auto DrawRowLabel = [&](const char *text, float y)
       {
-        float textY = placeToBorder * rowMultiplier;
-        return textY + (settingsFontTextSize / 2.0f) - (boxHeight / 2.0f);
+        int textW = MeasureText(text, settingsFontTextSize);
+        DrawText(text, screenWidth / 2 - 20 - textW, y + (boxHeight / 2) - (settingsFontTextSize / 2), settingsFontTextSize, WHITE);
       };
 
-      // general settings
-      float widestGeneralLabel = MeasureText("Shooting Sound: ", settingsFontTextSize);
-      float totalGeneralWidth = widestGeneralLabel + 20 + boxWidth;
-      float generalTextStartX = (GetScreenWidth() / 2.0f) - (totalGeneralWidth / 2.0f);
-      float generalBoxStartX = generalTextStartX + widestGeneralLabel + 20;
+      float controlX = screenWidth / 2.0f + 20.0f;
+      float currentY = startY;
 
-      DrawText("Shooting Sound:", generalTextStartX, placeToBorder * 3, settingsFontTextSize, WHITE);
-      if (GuiButton({generalBoxStartX, GetBoxY(3), (float)boxWidth, (float)boxHeight}, availableSounds[soundActive].c_str()))
+      DrawRowLabel("Shooting Sound:", currentY);
+      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, availableSounds[soundActive].c_str()))
       {
         soundActive++;
         if (soundActive >= availableSounds.size())
           soundActive = 0;
       }
+      currentY += boxHeight + gapY;
 
-      DrawText("Switch Sides:", generalTextStartX, placeToBorder * 6, settingsFontTextSize, WHITE);
-      if (GuiButton({generalBoxStartX, GetBoxY(6), (float)boxWidth, (float)boxHeight}, switchSidesInput))
+      DrawRowLabel("Switch Sides:", currentY);
+      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, switchSidesInput))
       {
         if (strcmp(switchSidesInput, "YES") == 0)
           strncpy(switchSidesInput, "NO", 63);
         else
           strncpy(switchSidesInput, "YES", 63);
       }
+      currentY += boxHeight + gapY;
 
       int previousScreenActive = screenActive;
       const char *currentScreenText = (screenActive == 0) ? "Windowed" : (screenActive == 1) ? "Borderless Window"
                                                                                              : "Fullscreen";
 
-      DrawText("Screen:", generalTextStartX, placeToBorder * 9, settingsFontTextSize, WHITE);
-      if (GuiButton({generalBoxStartX, GetBoxY(9), (float)boxWidth, (float)boxHeight}, currentScreenText))
+      DrawRowLabel("Screen:", currentY);
+      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, currentScreenText))
       {
         screenActive++;
         if (screenActive > 2)
           screenActive = 0;
       }
+      currentY += boxHeight + gapY;
 
       if (screenActive != previousScreenActive)
       {
@@ -642,21 +880,22 @@ int main()
         }
       }
 
-      DrawText("Background:", generalTextStartX, placeToBorder * 12, settingsFontTextSize, WHITE);
-      if (GuiButton({generalBoxStartX, GetBoxY(12), (float)boxWidth, (float)boxHeight}, availableBackgrounds[backgroundActive].c_str()))
+      DrawRowLabel("Background:", currentY);
+      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, availableBackgrounds[backgroundActive].c_str()))
       {
         backgroundActive++;
         if (backgroundActive >= availableBackgrounds.size())
           backgroundActive = 0;
       }
+      currentY += boxHeight + gapY;
 
       int previousResolutionActive = resolutionActive;
       const char *currentResolutionText = (resolutionActive == 0) ? "1920x1080" : (resolutionActive == 1) ? "1600x900"
                                                                               : (resolutionActive == 2)   ? "1280x720"
                                                                                                           : "1024x768";
 
-      DrawText("Resolution:", generalTextStartX, placeToBorder * 15, settingsFontTextSize, WHITE);
-      if (GuiButton({generalBoxStartX, GetBoxY(15), (float)boxWidth, (float)boxHeight}, currentResolutionText))
+      DrawRowLabel("Resolution:", currentY);
+      if (GuiButton({controlX, currentY, (float)boxWidth, (float)boxHeight}, currentResolutionText))
       {
         resolutionActive++;
         if (resolutionActive > 3)
@@ -680,34 +919,13 @@ int main()
 
         SetWindowSize(screenWidth, screenHeight);
 
-        const int gap = 40;
-        const float newTotalHeight = startButtonHeight + settingsButtonHeight + tutorialButtonHeight + quitButtonHeight + (gap * 3);
-        const float newStartY = screenHeight / 2.0f - newTotalHeight / 2.0f;
-
-        startButton.x = screenWidth / 2.0f - startButtonWidth / 2.0f;
-        startButton.y = newStartY;
-        startButtonTextX = startButton.x + (startButton.width - startButtonTextWidth) / 2;
-        startButtonTextY = startButton.y + (startButton.height - startButtonTextFontSize) / 2;
-
-        settingsButton.x = screenWidth / 2.0f - settingsButtonWidth / 2.0f;
-        settingsButton.y = startButton.y + startButton.height + gap;
-        settingsButtonTextX = settingsButton.x + (settingsButton.width - settingsButtonTextWidth) / 2;
-        settingsButtonTextY = settingsButton.y + (settingsButton.height - settingsButtonTextFontSize) / 2;
-
-        tutorialButton.x = screenWidth / 2.0f - tutorialButtonWidth / 2.0f;
-        tutorialButton.y = settingsButton.y + settingsButton.height + gap;
-        tutorialButtonTextX = tutorialButton.x + (tutorialButton.width - tutorialButtonTextWidth) / 2;
-        tutorialButtonTextY = tutorialButton.y + (tutorialButton.height - tutorialButtonTextFontSize) / 2;
-
-        quitButton.x = screenWidth / 2.0f - quitButtonWidth / 2.0f;
-        quitButton.y = tutorialButton.y + tutorialButton.height + gap;
-        quitButtonTextX = quitButton.x + (quitButton.width - quitButtonTextWidth) / 2;
-        quitButtonTextY = quitButton.y + (quitButton.height - quitButtonTextFontSize) / 2;
-
         settingsBackButton.x = screenWidth / 2.0f - settingsBackButtonWidth / 2.0f;
         settingsBackButton.y = screenHeight - placeToBorder - settingsBackButtonHeight;
         settingsBackButtonTextX = settingsBackButton.x + (settingsBackButton.width - settingsBackButtonTextWidth) / 2;
         settingsBackButtonTextY = settingsBackButton.y + (settingsBackButton.height - settingsBackButtonTextFontSize) / 2;
+
+        defaultPanzerPosition1 = {(float)placeToBorder, screenHeight / 2.0f};
+        defaultPanzerPosition2 = {screenWidth - panzer1.getPanzerSize().x - placeToBorder, screenHeight / 2.0f};
       }
 
       // back button
@@ -774,6 +992,12 @@ int main()
 
       DrawRectangleRec(settingsBackButton, GRAY);
       DrawText(settingsBackButtonText, settingsBackButtonTextX, settingsBackButtonTextY, settingsBackButtonTextFontSize, BLACK);
+
+      if (settingsBackButtonAction)
+      {
+        tutorialButtonAction = false;
+        settingsBackButtonAction = false;
+      }
     }
 
     EndDrawing();

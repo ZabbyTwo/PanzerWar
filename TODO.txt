@@ -25,13 +25,15 @@
 +add quit button on home screen
 +when "esc" pressed window closes, dont want it
 
--game modes best of 3/5/7
-    -survial: reload timer for 2 seconds and have ammunition for 50 shots
-    -deathmatch: reload timer for 2 seconds and have infinite ammunition
-    -custom: choose shooting/movement speed, reload timer, ammunition and how many rounds
++game modes best of 3/5/7
+    +survial: reload timer for 2 seconds and have ammunition for 50 shots
+    +deathmatch: reload timer for 2 seconds and have 150 ammunition
+    +custom: choose shooting/movement speed, reload timer, ammunition and how many rounds make a default one 
     !on the homescreen you can choose the game mode and then press play
 
--after match finished ask, Replay(Play again) or To Home Screen
++after match finished ask, Replay(Play again) or To Home Screen
+
++add reload timer, and ammo count on each side
 
 -sprites
     -panzers

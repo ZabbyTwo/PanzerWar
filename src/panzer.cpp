@@ -52,10 +52,30 @@ void panzer::setIsPanzerHit(bool state)
     this->IsPanzerHit = state;
 }
 
+void panzer::setPanzerPosition(Vector2 coordinates)
+{
+    this->PanzerPosition = coordinates;
+}
+
+void panzer::setMovementSpeed(float speed)
+{
+    this->MovementSpeed = speed;
+}
+
+void panzer::setShootingVelocity(float vel)
+{
+    this->ShootingVelocity = vel;
+}
+
 // logic
 void panzer::addPanzerBullets(Vector2 bullet)
 {
     this->PanzerBullets.push_back(bullet);
+}
+
+void panzer::resetPanzerBullets()
+{
+    this->PanzerBullets.clear();
 }
 
 void panzer::changePanzerPositionY(char op) // op for operator
