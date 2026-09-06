@@ -66,4 +66,4 @@
 
 +add cmake/make to run compile etc
 
--update readme, add tutorial to add custom backgrounds, shooting sounds and what to look out for
++update readme, add tutorial to add custom backgrounds, shooting sounds and what to look out for
